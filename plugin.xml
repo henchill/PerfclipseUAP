@@ -19,8 +19,13 @@
                id="Perfclipse.menus.sampleMenu"
                label="Perforation">
             <command
-                  commandId="Perfclipse.commands.perforateCommand"
+                  commandId="Perfclipse.commands.perforateSelection"
                   label="Perforate Selection"
+                  style="push">
+            </command>
+            <command
+                  commandId="Perfclipse.commands.runPerforation"
+                  label="Run Perforation"
                   style="push">
             </command>
          </menu>
@@ -29,8 +34,16 @@
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="handlers.PerforateHandler"
-            commandId="Perfclipse.commands.perforateCommand">
+            class="handlers.PerforateSelectionHandler"
+            commandId="Perfclipse.commands.perforateSelection">
+      </handler>
+      <handler
+            class="handlers.RunPerforationHandler"
+            commandId="Perfclipse.commands.runPerforation">
+      </handler>
+      <handler
+            class="handlers.RunIndividualAnalysis"
+            commandId="Perfclipse.commands.runIndividualAnalysis">
       </handler>
    </extension>
    <extension
@@ -44,9 +57,43 @@
       </category>
       <command
             categoryId="Perfclipse.commands.codePerforationCategory"
-            id="Perfclipse.commands.perforateCommand"
-            name="Perforate">
+            id="Perfclipse.commands.perforateSelection"
+            name="Perforate Selection">
       </command>
+      <command
+            categoryId="Perfclipse.commands.codePerforationCategory"
+            id="Perfclipse.commands.runPerforation"
+            name="Run Perforation">
+      </command>
+      <command
+            categoryId="Perfclipse.commands.codePerforationCategory"
+            id="Perfclipse.commands.RunIndividualAnalysis"
+            name="Run Individual Analysis">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="handlers.CustomJavaAppDelegate"
+            id="Perfclipse.launchConfigurationTypes.custom"
+            name="Custom Launch Java App">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="CustomLaunchConfigurationDelegate.Image"
+            icon="CustomLaunchConfigurationDelegate.Image"
+            id="CustomLaunchConfigurationDelegate.Image">
+      </launchConfigurationTypeImage>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="handlers.JavaAppLaunchConfigurationTabGroup"
+            id="Perfclipse.launchConfigurationTabGroups.customJavaApp"
+            type="Perfclipse.launchConfigurationTabGroups.customJavaApp">
+      </launchConfigurationTabGroup>
    </extension>
 
 </plugin>

@@ -9,8 +9,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 
+import perfclipse.PerforationTypeDialog;
 
-public class PerforateHandler extends AbstractHandler {
+
+public class PerforateSelectionHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
