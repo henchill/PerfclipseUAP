@@ -27,7 +27,7 @@ public class ClassSelection extends WizardPage {
 	public ClassSelection() {
 		super("Class Selection");
 		setTitle("Class Selection");
-		setDescription("Specify full qualified name of project, main class and evaluation class");
+		setDescription("Specify full qualified name of project, main class and evaluation class");		
 	}
 	
 	@Override

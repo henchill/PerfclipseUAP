@@ -83,6 +83,13 @@ public class JavaPerforation {
 		}
 		return perforations.get(project);
 	}
+	
+	public static List<PerforatedLoop> getPerforatedLoops(IProject project) {
+		if (perforations.containsKey(project)) {
+			return perforations.get(project).loops;
+		}
+		return null;
+	}
 
 	public void perforateLoop(ITextSelection sel, ITextEditor editor) {
 		// TODO Auto-generated method stub

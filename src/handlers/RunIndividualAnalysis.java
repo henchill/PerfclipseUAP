@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -38,8 +40,11 @@ import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import perfclipse.PerforationInfoDialog;
+import perfclipse.PerforationLaunch;
 import perfclipse.PerforationTypeDialog;
 import perfclipse.Results;
+import perfclipse.perforations.JavaPerforation;
+import perfclipse.perforations.PerforatedLoop;
 
 public class RunIndividualAnalysis extends AbstractHandler {
     
@@ -56,8 +61,24 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    	String project = dialog.getProjectName();
 	    	String main = dialog.getMainClass();
 	    	String eval = dialog.getEvalClass();
-	    	IJavaProject jProject = getJavaProject(project);
-	    	if (jProject != null) { // && eval class is correct
+	    	IProject iProject = getJavaProject(project);
+	    	
+	    	if (iProject != null) { // && eval class is correct
+	    		PerforationLaunch pl = new PerforationLaunch();
+	    		
+	    		JavaPerforation jp;
+		    	try {
+		    		jp = JavaPerforation.getPerforation(iProject, shell);
+					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
+					if (loops != null) {
+						for (PerforatedLoop loop : loops) {
+							
+						}
+					}
+				} catch (CoreException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 		    	// runOriginal();
 		    	// get all perforations
 		    	// for each perforation:
@@ -71,14 +92,14 @@ public class RunIndividualAnalysis extends AbstractHandler {
 		return null;
 	}
 	
-	private IJavaProject getJavaProject(String proj) {
+	private IProject getJavaProject(String proj) {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 	    IWorkspaceRoot root = workspace.getRoot();
 	    // Get all projects in the workspace
 	    IProject[] projects = root.getProjects();
 	    for (IProject project : projects) {	    	
 	    	if (project.getName().equals(proj)) {
-	    		return JavaCore.create(project);
+	    		return project;
 	    	}
 	    }
 		return null;

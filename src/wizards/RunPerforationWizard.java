@@ -1,6 +1,8 @@
 package wizards;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
@@ -18,17 +20,22 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.TreeItem;
 
-import perfclipse.IPerforationEvaluation;
+import perfclipse.PerforationEvaluation;
+import perfclipse.PerforationLaunch;
 import perfclipse.Results;
+import perfclipse.perforations.JavaPerforation;
+import perfclipse.perforations.PerforatedLoop;
 
 public class RunPerforationWizard extends Wizard {
 
 	protected ClassSelection classSel;
 	protected LoopSelectionWizard loopSel;
+	private String sharedProject;
 
 	private HashMap<String, Results[]> output;
-	
+	private List<Results> results;
 	public RunPerforationWizard() {
 	    super();
 	    setNeedsProgressMonitor(true);
@@ -44,92 +51,89 @@ public class RunPerforationWizard extends Wizard {
 	
 	@Override
 	public boolean performFinish() {
-		String main = classSel.getMainText();
-		String project = classSel.getProjectText();
-		String eval = classSel.getEvalText();		
-		try {
-			Results[] results = {runUnperforated(project, main, eval),
-								runPerforated(project, main, eval)};
-			System.out.println(results);
-			output = new HashMap<String, Results[]>();
-			output.put("Run1", results);
-		}
-		catch (CoreException e) {
-			e.printStackTrace();
-		}
-		catch (ClassNotFoundException f){
-			f.printStackTrace();
-		}
-		catch (InstantiationException g){
-			g.printStackTrace();
-		}
-		catch (IllegalAccessException h){
-			h.printStackTrace();
-		}
-		return true;
-	}
-	
-	private Results runUnperforated(String proj, String main, String evalFunction) throws CoreException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-		IJavaProject project = getJavaProject(proj);
-		if (project != null) {
-			long elapsedTime = launch(project, main);
-			Results result = new Results();
-			result.RunName = "UnPerforatedRun";
-			result.ElapsedTime = elapsedTime;
-//			result.QualityOfService = evaluateOutput(evalFunction);
-			result.PerforatedLoops = null;
-			return result;
+		boolean valid = validateInputs();
+		if (valid) {
+			String main = classSel.getMainText();
+			String project = classSel.getProjectText();
+			String eval = classSel.getEvalText();		
+			try {
+				PerforationLaunch pl = new PerforationLaunch();
+				results = new ArrayList<Results>(); 
+				results.add(pl.runUnperforated(project, main, eval));
+				results.add(runPerforated(project, main, eval));				
+				
+			}
+			catch (CoreException e) {
+				e.printStackTrace();
+			}
+			
+			return true;
 		} else {
-			MessageDialog.openError(getShell(), "Error", "Could not find the project specified.");
-			return null;
+			return false;
 		}
 	}
 	
-	private Results runPerforated(String proj, String main, String evalFunction) throws CoreException, ClassNotFoundException, InstantiationException, IllegalAccessException{
-		IJavaProject project = getJavaProject(proj);
-		long elapsedTime = launch(project, main);
-		Results result = new Results();
-		result.RunName = "PerforatedRun";
-		result.ElapsedTime = elapsedTime;
-//		result.QualityOfService = evaluateOutput(evalFunction);
-		result.PerforatedLoops = loopSel.getSelectedLoops();
-		return result;
-	}
-	
-	private Object evaluateOutput(String evalFunction) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-		Class eval = Class.forName(evalFunction);
-		IPerforationEvaluation obj = (IPerforationEvaluation) eval.newInstance();
+	private boolean validateInputs() {
+		IProject project = PerforationLaunch.getProject(classSel.getProjectText());
+		PerforationEvaluation eval = PerforationLaunch.getEvalObject(classSel.getEvalText());
 		
-		return obj.evaluate();
+		if (project == null && eval == null) {
+			MessageDialog.openError(getShell(), "Class Selection Error", "Could not find the specified project or evaluation class");
+			return false;
+		} else if (project == null && eval != null) {
+			MessageDialog.openError(getShell(), "Project Name Error", "Could not find the specified project name");
+			return false;
+		} else if (eval == null && project != null) {
+			MessageDialog.openError(getShell(), "Evaluation Class Error", "Could not find the specified evaluation class");
+			return false;
+		} else {
+			return true;
+		}		
+	}
+
+	private boolean isProjectInputValid() {
+		IProject project = PerforationLaunch.getProject(classSel.getProjectText());
+		if (project != null) {
+			return true;
+		}
+		return false;
 	}
 	
-	private IJavaProject getJavaProject(String proj) {
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-	    IWorkspaceRoot root = workspace.getRoot();
-	    // Get all projects in the workspace
-	    IProject[] projects = root.getProjects();
-	    for (IProject project : projects) {	    	
-	    	if (project.getName().equals(proj)) {
-	    		return JavaCore.create(project);
-	    	}
-	    }
-		return null;
+	private boolean isEvaluationInputValid() {
+		PerforationEvaluation eval = PerforationLaunch.getEvalObject(classSel.getEvalText());
+		if (eval != null) {
+			return true;
+		}
+		return false;
 	}
 	
-	private long launch(IJavaProject proj, String main) throws CoreException {
-		IVMInstall vm = JavaRuntime.getVMInstall(proj);
-		if (vm == null) vm = JavaRuntime.getDefaultVMInstall();
-		IVMRunner vmr = vm.getVMRunner(ILaunchManager.RUN_MODE);
-		String[] cp = JavaRuntime.computeDefaultRuntimeClassPath(proj);
-		VMRunnerConfiguration config = new VMRunnerConfiguration(main, cp);
-		ILaunch launch = new Launch(null, ILaunchManager.RUN_MODE, null);
-		long startTime = System.currentTimeMillis();
-		vmr.run(config, launch, null);
-		long endTime = System.currentTimeMillis();
-		return endTime - startTime;
+	private Results runPerforated(String proj, String main, String evalClass) throws CoreException {
+		TreeItem[] selectedLoops = loopSel.getSelectedLoops();
+		IProject project = PerforationLaunch.getProject(proj);
+		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(project);
+		List<PerforatedLoop> sLoops = new ArrayList<PerforatedLoop>();
+		for (TreeItem item : selectedLoops){
+			String parent = item.getParentItem().getText();
+			String name = item.getText();
+			String loopName = parent + "-" + name;
+			for (PerforatedLoop loop : loops) {
+				if (!loop.getName().equals(loopName)) {
+					loop.setFactor(0);
+				} else {
+					loop.setFactor();
+					sLoops.add(loop);
+				}
+			}
+		}
+		PerforationLaunch pl = new PerforationLaunch();
+		return pl.runPerforated(project, main, evalClass, sLoops);
 	}
-	
+
 	public HashMap<String, Results[]> getOutput() {
 		return output;
+	}
+	
+	public List<Results> getResults() {
+		return results;
 	}
 }

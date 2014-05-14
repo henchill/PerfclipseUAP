@@ -45,8 +45,6 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.jdt.internal.corext.refactoring.code.ExtractMethodRefactoring;
 import org.eclipse.ui.part.FileEditorInput;
-import org.eclipse.ltk.core.refactoring.Change;
-
 import perfclipse.perforations.JavaPerforation;
 
 public class PerforateHandler extends AbstractHandler {
@@ -65,12 +63,12 @@ public class PerforateHandler extends AbstractHandler {
 		    IProject project = file.getProject();
 		    JavaPerforation jp;
 			try {
-				jp = JavaPerforation.getPerforation(project, shell);
-				jp.perforateLoop(sel, editor);
+				jp = JavaPerforation.getPerforation(project, shell);				
 			} catch (CoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+			
 	    }
 	    return null;
 	    /*ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());

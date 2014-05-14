@@ -1,5 +1,12 @@
 package wizards;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -15,6 +22,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
+import perfclipse.PerforationLaunch;
+import perfclipse.perforations.JavaPerforation;
+import perfclipse.perforations.PerforatedLoop;
+
 public class LoopSelectionWizard extends WizardPage {
 	
 	private Tree tree;
@@ -23,7 +34,7 @@ public class LoopSelectionWizard extends WizardPage {
 	protected LoopSelectionWizard() {
 		super("Loop Selection");
 		setTitle("Loop Selection");
-		setDescription("Which marked loops should be perforated");
+		setDescription("Which marked loops should be perforated");		
 	}
 	
 	private void checkPath(TreeItem item, boolean checked, boolean grayed) {
@@ -77,19 +88,8 @@ public class LoopSelectionWizard extends WizardPage {
 	            }
 	        }
 	    });
-	    // Modify to add class and methods. 
-	    for (int i = 0; i < 4; i++) {
-	        TreeItem itemI = new TreeItem(tree, SWT.NONE);
-	        itemI.setText("Item " + i);
-	        for (int j = 0; j < 4; j++) {
-	            TreeItem itemJ = new TreeItem(itemI, SWT.NONE);
-	            itemJ.setText("Item " + i + " " + j);
-	            for (int k = 0; k < 4; k++) {
-	                TreeItem itemK = new TreeItem(itemJ, SWT.NONE);
-	                itemK.setText("Item " + i + " " + j + " " + k);
-	            }
-	        }
-	    }
+	    
+	    buildTree();
 	    
 	    GridData gd = new GridData(GridData.FILL_BOTH);
 	    tree.setLayoutData(gd);
@@ -97,7 +97,32 @@ public class LoopSelectionWizard extends WizardPage {
 	    setControl(container);
 	    setPageComplete(true);
 	}
-
+	
+	private void buildTree() {
+		ClassSelection page = (ClassSelection) this.getWizard().getPage("Class Selection");
+		String projectName = page.getProjectText();
+		IProject iProject = PerforationLaunch.getProject(projectName);
+		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
+		HashMap<String, ArrayList<PerforatedLoop>> classMap = new HashMap<String, ArrayList<PerforatedLoop>>();
+		for (PerforatedLoop loop : loops) {
+			// String class = loop.getName().split("-");
+			// classMap.put(class, loop);
+		}
+		
+		Iterator it = classMap.entrySet().iterator();
+	    while (it.hasNext()) {
+	        HashMap.Entry pairs = (HashMap.Entry)it.next();
+	        TreeItem classNode = new TreeItem(tree, SWT.NONE);
+	        classNode.setText((String) pairs.getKey());
+	        for (PerforatedLoop loop : (ArrayList<PerforatedLoop>) pairs.getValue()) {
+	        	TreeItem loopNode = new TreeItem(classNode, SWT.NONE);
+	        	loopNode.setText(loop.getName());
+	        }
+	        
+	        it.remove(); // avoids a ConcurrentModificationException
+	    }
+		
+	}
 	public TreeItem[] getSelectedLoops() {
 	    return tree.getSelection(); 
 	}
