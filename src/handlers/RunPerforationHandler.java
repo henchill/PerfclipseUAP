@@ -66,9 +66,20 @@ public class RunPerforationHandler extends AbstractHandler {
 		String projectName = results.get(0).RunName.split("-")[1];
 		String filename = "PerforationMultiLoopResults.csv";
 		File resultsOut = new File(filename);
+		
 		if(!resultsOut.exists()) {
 			try {
 				resultsOut.createNewFile();
+				FileWriter writer = new FileWriter(resultsOut, true);
+				writer.append("Loops");
+			    writer.append(',');
+			    writer.append("Quality Of Service");
+			    writer.append(',');
+			    writer.append("Performance");
+			    writer.append('\n');
+			    writer.flush();
+			    writer.close();
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -76,23 +87,23 @@ public class RunPerforationHandler extends AbstractHandler {
 		} 
 		
 		try
-		{
-			DateFormat df = new SimpleDateFormat("yyyyMMddhhmm");			
+		{		
+			DateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
 		    FileWriter writer = new FileWriter(resultsOut, true);
-	 
-		    writer.append("Loop");
-		    writer.append(',');
-		    writer.append("Quality Of Service");
-		    writer.append(',');
-		    writer.append("Performance");
-		    writer.append('\n');
-		    
+		    writer.append(" , , \n");
 		    for (Results result : results) {
-		    	writer.append(result.PerforatedLoops.get(0).getName());
+		    	if (result.PerforatedLoops.size() != 0) {
+			    	for (PerforatedLoop loop: result.PerforatedLoops) {
+			    		writer.append(loop.getName());
+			    		writer.append(";");
+			    	}
+		    	} else {
+		    		writer.append("Unperforated");
+		    	}
 		    	writer.append(',');
 		    	writer.append((String) result.QualityOfService);
 		    	writer.append(',');
-		    	writer.append(df.format(new Date(result.ElapsedTime)));
+		    	writer.append(String.valueOf(result.ElapsedTime)); //df.format(new Date(result.ElapsedTime)));
 		    	writer.append('\n');
 		    }
 	 

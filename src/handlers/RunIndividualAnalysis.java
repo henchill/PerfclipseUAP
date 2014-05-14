@@ -61,10 +61,13 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    	String project = dialog.getProjectName();
 	    	String main = dialog.getMainClass();
 	    	String eval = dialog.getEvalClass();
-	    	IProject iProject = getJavaProject(project);
+	    	IProject iProject = PerforationLaunch.getJavaProject(project);
+	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
+	    	List<Results> results = new ArrayList<Results>();
 	    	
-	    	if (iProject != null) { // && eval class is correct
+	    	if (iProject != null && evalObj != null) { // && eval class is correct
 	    		PerforationLaunch pl = new PerforationLaunch();
+	    		results.add(pl.runUnperforated(project, main, eval));
 	    		
 	    		JavaPerforation jp;
 		    	try {
@@ -72,71 +75,30 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
 					if (loops != null) {
 						for (PerforatedLoop loop : loops) {
-							
+							loop.setFactor(0);
+						}
+						for (PerforatedLoop loop : loops) {
+							loop.setFactor();
+							results.add(pl.runPerforated(iProject, main, eval));
+							loop.setFactor(0);
+							// add anotation with qos and time performance.
 						}
 					}
 				} catch (CoreException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-		    	// runOriginal();
-		    	// get all perforations
-		    	// for each perforation:
-		    	// 		runPerforated(loop);
-	    		//		evaluate result
-	    		// 		add annotation.
-	    		//  
+		    	recordResults(results);
+	    	} else {
+	    		MessageDialog.openError(shell, "Class Selection Error", "Could not find the specified project or evaluation class");
 	    	}
+	    	
 	    }
 
 		return null;
 	}
-	
-	private IProject getJavaProject(String proj) {
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-	    IWorkspaceRoot root = workspace.getRoot();
-	    // Get all projects in the workspace
-	    IProject[] projects = root.getProjects();
-	    for (IProject project : projects) {	    	
-	    	if (project.getName().equals(proj)) {
-	    		return project;
-	    	}
-	    }
-		return null;
-	}
 
-	private Results runUnperforated(IJavaProject project, String main) throws CoreException {		
-		long elapsedTime = launch(project, main);
-		Results result = new Results();
-		result.RunName = "UnPerforatedRun";
-		result.ElapsedTime = elapsedTime;
-		result.PerforatedLoops = null;
-		return result;
-	}
-	
-	private Results runPerforated(IJavaProject project, String main) throws CoreException {		
-		long elapsedTime = launch(project, main);
-		Results result = new Results();
-		result.RunName = "PerforatedRun";
-		result.ElapsedTime = elapsedTime;
-//		result.PerforatedLoops = loopSel.getSelectedLoops();
-		return result;
-	}
-	
-	private long launch(IJavaProject proj, String main) throws CoreException {
-		IVMInstall vm = JavaRuntime.getVMInstall(proj);
-		if (vm == null) vm = JavaRuntime.getDefaultVMInstall();
-		IVMRunner vmr = vm.getVMRunner(ILaunchManager.RUN_MODE);
-		String[] cp = JavaRuntime.computeDefaultRuntimeClassPath(proj);
-		VMRunnerConfiguration config = new VMRunnerConfiguration(main, cp);
-		ILaunch launch = new Launch(null, ILaunchManager.RUN_MODE, null);
-		long startTime = System.currentTimeMillis();
-		vmr.run(config, launch, null);
-		long endTime = System.currentTimeMillis();
-		return endTime - startTime;
-	}
-
-	private void generateOutput(Results[] results) {
+	private void recordResults(List<Results> results) {
 		try
 		{
 			DateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
@@ -151,11 +113,11 @@ public class RunIndividualAnalysis extends AbstractHandler {
 		    writer.append('\n');
 		    
 		    for (Results result : results) {
-		    	writer.append(result.PerforatedLoops[0].getText());
+		    	writer.append(result.PerforatedLoops.getName());
 		    	writer.append(',');
 		    	writer.append((String) result.QualityOfService);
 		    	writer.append(',');
-		    	writer.append(df.format(new Date(result.ElapsedTime)));
+		    	writer.append(String.valueOf(result.ElapsedTime)); //df.format(new Date(result.ElapsedTime)));
 		    	writer.append('\n');
 		    }
 	 

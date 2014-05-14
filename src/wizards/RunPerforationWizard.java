@@ -78,7 +78,7 @@ public class RunPerforationWizard extends Wizard {
 		PerforationEvaluation eval = PerforationLaunch.getEvalObject(classSel.getEvalText());
 		
 		if (project == null && eval == null) {
-			MessageDialog.openError(getShell(), "Class Selection Error", "Could not find the specified project or evaluation class");
+			MessageDialog.openError(getShell(), "Class Selection Error", "Could not find the specified project and evaluation class");
 			return false;
 		} else if (project == null && eval != null) {
 			MessageDialog.openError(getShell(), "Project Name Error", "Could not find the specified project name");

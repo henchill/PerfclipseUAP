@@ -38,7 +38,7 @@ public class PerforationLaunch {
 		
 		result.RunName = "UnPerforatedRun-%s".format(project.getName());
 		result.ElapsedTime = elapsedTime;
-		result.PerforatedLoops = null;
+		result.PerforatedLoops = new ArrayList<PerforatedLoops>();
 		return result;
 	}
 	
