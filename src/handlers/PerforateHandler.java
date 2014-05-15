@@ -64,12 +64,12 @@ public class PerforateHandler extends AbstractHandler {
 		    IProject project = file.getProject();
 		    JavaPerforation jp;
 			try {
-				jp = JavaPerforation.getPerforation(project, shell);			
+				jp = JavaPerforation.getPerforation(project, shell);
+				jp.perforateLoop(sel, editor);
 			} catch (CoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
 	    }
 	    return null;
 	    /*ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
