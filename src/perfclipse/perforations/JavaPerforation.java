@@ -88,7 +88,7 @@ public class JavaPerforation {
 		if (perforations.containsKey(project)) {
 			return perforations.get(project).loops;
 		}
-		return null;
+		return new ArrayList<PerforatedLoop>();
 	}
 
 	public void perforateLoop(ITextSelection sel, ITextEditor editor) {

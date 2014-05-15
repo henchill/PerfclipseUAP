@@ -105,8 +105,8 @@ public class LoopSelectionWizard extends WizardPage {
 		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
 		HashMap<String, ArrayList<PerforatedLoop>> classMap = new HashMap<String, ArrayList<PerforatedLoop>>();
 		for (PerforatedLoop loop : loops) {
-			// String class = loop.getName().split("-");
-			// classMap.put(class, loop);
+			String className = loop.getName().split("-")[0];
+			classMap.get(className).add(loop); 
 		}
 		
 		Iterator it = classMap.entrySet().iterator();

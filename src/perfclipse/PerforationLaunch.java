@@ -1,5 +1,6 @@
 package perfclipse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -38,7 +39,7 @@ public class PerforationLaunch {
 		
 		result.RunName = "UnPerforatedRun-%s".format(project.getName());
 		result.ElapsedTime = elapsedTime;
-		result.PerforatedLoops = new ArrayList<PerforatedLoops>();
+		result.PerforatedLoops = new ArrayList<PerforatedLoop>();
 		return result;
 	}
 	
@@ -75,6 +76,7 @@ public class PerforationLaunch {
 			obj = (PerforationEvaluation) eval.newInstance();
 		} catch (ClassNotFoundException | InstantiationException
 				| IllegalAccessException e) {
+			e.printStackTrace();
 			return null;
 		}
 		return obj;
@@ -87,6 +89,7 @@ public class PerforationLaunch {
 	    IProject[] projects = root.getProjects();
 	    for (IProject project : projects) {	    	
 	    	if (project.getName().equals(projectName)) {
+	    		System.out.println(project.getName() + "---" + projectName);
 	    		return project;
 	    	}
 	    }

@@ -39,6 +39,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.texteditor.ITextEditor;
 
+import perfclipse.PerforationEvaluation;
 import perfclipse.PerforationInfoDialog;
 import perfclipse.PerforationLaunch;
 import perfclipse.PerforationTypeDialog;
@@ -61,13 +62,18 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    	String project = dialog.getProjectName();
 	    	String main = dialog.getMainClass();
 	    	String eval = dialog.getEvalClass();
-	    	IProject iProject = PerforationLaunch.getJavaProject(project);
+	    	IProject iProject = PerforationLaunch.getProject(project);
 	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
 	    	List<Results> results = new ArrayList<Results>();
 	    	
-	    	if (iProject != null && evalObj != null) { // && eval class is correct
+	    	if (iProject != null) { // && eval class is correct
 	    		PerforationLaunch pl = new PerforationLaunch();
-	    		results.add(pl.runUnperforated(project, main, eval));
+	    		try {
+					results.add(pl.runUnperforated(project, main, eval));
+				} catch (CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 	    		
 	    		JavaPerforation jp;
 		    	try {
@@ -79,8 +85,13 @@ public class RunIndividualAnalysis extends AbstractHandler {
 						}
 						for (PerforatedLoop loop : loops) {
 							loop.setFactor();
-							results.add(pl.runPerforated(iProject, main, eval));
+							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
+							tmp.add(loop);
+							Results res = pl.runPerforated(iProject, main, eval, tmp);
+							results.add(res);
 							loop.setFactor(0);
+							// TODO Add if statement for marker
+							loop.addMarker("GREENMARKER", "GREENANNOTATION", res);
 							// add anotation with qos and time performance.
 						}
 					}
@@ -113,7 +124,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 		    writer.append('\n');
 		    
 		    for (Results result : results) {
-		    	writer.append(result.PerforatedLoops.getName());
+		    	writer.append(result.PerforatedLoops.get(0).getName());
 		    	writer.append(',');
 		    	writer.append((String) result.QualityOfService);
 		    	writer.append(',');

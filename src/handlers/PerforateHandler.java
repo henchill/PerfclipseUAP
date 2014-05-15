@@ -1,4 +1,4 @@
-package perfclipse.handlers;
+package handlers;
 
 import java.util.List;
 

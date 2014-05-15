@@ -28,6 +28,11 @@
                   label="Run Perforation"
                   style="push">
             </command>
+            <command
+                  commandId="Perfclipse.commands.individualLoopAnalysis"
+                  label="Individual Loop Analysis"
+                  style="push">
+            </command>
          </menu>
       </menuContribution>
    </extension>
@@ -43,7 +48,11 @@
       </handler>
       <handler
             class="handlers.RunIndividualAnalysis"
-            commandId="Perfclipse.commands.runIndividualAnalysis">
+            commandId="Perfclipse.commands.individualLoopAnalysis">
+      </handler>
+      <handler
+            class="perfclipse.ViewResults"
+            commandId="Perfclipse.commands.viewResults">
       </handler>
    </extension>
    <extension
@@ -67,8 +76,13 @@
       </command>
       <command
             categoryId="Perfclipse.commands.codePerforationCategory"
-            id="Perfclipse.commands.RunIndividualAnalysis"
-            name="Run Individual Analysis">
+            id="Perfclipse.commands.individualLoopAnalysis"
+            name="Individual Loop Analysis">
+      </command>
+      <command
+            categoryId="Perfclipse.commands.codePerforationCategory"
+            id="Perfclipse.commands.viewResults"
+            name="View Results">
       </command>
    </extension>
    <extension
@@ -94,6 +108,52 @@
             id="Perfclipse.launchConfigurationTabGroups.customJavaApp"
             type="Perfclipse.launchConfigurationTabGroups.customJavaApp">
       </launchConfigurationTabGroup>
+   </extension>
+   <extension
+         id="Perfclipse.greenMarker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.marker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="Perfclipse.greenAnnotation"
+            colorPreferenceKey="clcolor"
+            colorPreferenceValue="0,255,0"
+            icon="icons/sample.gif"
+            label="GreenAnnotation"
+            overviewRulerPreferenceKey="clruler"
+            overviewRulerPreferenceValue="false"
+            textPreferenceKey="cltext"
+            textPreferenceValue="true"
+            textStylePreferenceKey="clstyle"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="clvertical"
+            verticalRulerPreferenceValue="true">
+      </specification>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerUpdaters">
+      <updater
+            class="markers.GreenMarkerUpdater"
+            id="Perfclipse.GreenMarkerUpdater">
+      </updater>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerType="Perfclipse.greenMarker"
+            name="Perfclipse.greenAnnotation"
+            super="org.eclipse.ui.workbench.texteditor.info">
+      </type>
    </extension>
 
 </plugin>

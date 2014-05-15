@@ -31,6 +31,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import perfclipse.Results;
+import perfclipse.perforations.PerforatedLoop;
 import wizards.RunPerforationWizard;
 
 

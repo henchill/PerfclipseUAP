@@ -74,7 +74,7 @@ public class PerforationInfoDialog extends TitleAreaDialog {
 	
 	private void createEval(Composite container) {
 		Label lblEval = new Label(container, SWT.NONE);
-		lblEval.setText("Main Class");
+		lblEval.setText("Evaluation Class");
 	    
 	    GridData dataEval = new GridData();
 	    dataEval.grabExcessHorizontalSpace = true;
