@@ -31,6 +31,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import perfclipse.Results;
+import perfclipse.ResultsViewer;
 import perfclipse.perforations.PerforatedLoop;
 import wizards.RunPerforationWizard;
 
@@ -41,15 +42,19 @@ public class RunPerforationHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		Shell shell = HandlerUtil.getActiveShell(event);
 		RunPerforationWizard wizard = new RunPerforationWizard();
-		WizardDialog dialog = new WizardDialog(shell, wizard);
-		List<Results> results;
-		if (dialog.open() == Window.OK) {
-			results = wizard.getResults();
-			recordResults(results);
-	    } else {
-		    System.out.println("Cancel pressed");
-		}
-		
+		ResultsViewer rv = new ResultsViewer(shell);
+		rv.open();
+//		WizardDialog dialog = new WizardDialog(shell, wizard);
+//		List<Results> results;
+//		if (dialog.open() == Window.OK) {
+//			results = wizard.getResults();
+//			recordResults(results);
+//			ResultsViewer rv = new ResultsViewer(shell);
+//			rv.getShell().open();
+//	    } else {
+//		    System.out.println("Cancel pressed");
+//		}
+//		
 		return null;
 	}
 	
