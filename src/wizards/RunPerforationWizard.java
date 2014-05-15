@@ -118,9 +118,9 @@ public class RunPerforationWizard extends Wizard {
 			String loopName = parent + "-" + name;
 			for (PerforatedLoop loop : loops) {
 				if (!loop.getName().equals(loopName)) {
-					loop.setFactor(0);
+//					loop.setFactor(0);
 				} else {
-					loop.setFactor();
+//					loop.setFactor();
 					sLoops.add(loop);
 				}
 			}

@@ -39,7 +39,7 @@
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="handlers.PerforateHandler"
+            class="perfclipse.handlers.PerforateHandler"
             commandId="Perfclipse.commands.perforateSelection">
       </handler>
       <handler
