@@ -84,19 +84,20 @@ public class JavaPerforation {
 		return perforations.get(project);
 	}
 
-	public void perforateLoop(ITextSelection sel, ITextEditor editor) {
-		// TODO Auto-generated method stub
+	public PerforatedLoop perforateLoop(ITextSelection sel, ITextEditor editor) {
 		ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
         ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
         CompilationUnit cu = parse(icu);
         NodeFinder finder = new NodeFinder(cu, sel.getOffset(), sel.getLength());
         ASTNode node = finder.getCoveringNode();
         try {
-			findLoops(shell, cu, icu, node);
+			return findLoop(shell, cu, icu, node);
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (PerforationException e) {
+			MessageDialog.openError(shell, "Perforation failed", e.getMessage());
 		}
+        return null;
 	}
 
 	/**
@@ -106,7 +107,7 @@ public class JavaPerforation {
 	 * @param unit
 	 * @return
 	 */
-	private CompilationUnit parse(ICompilationUnit unit) {
+	static CompilationUnit parse(ICompilationUnit unit) {
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(unit);
@@ -114,7 +115,7 @@ public class JavaPerforation {
 		return (CompilationUnit) parser.createAST(null);
 	}
 
-	private void findLoops(Shell shell, CompilationUnit cu, ICompilationUnit icu, ASTNode node) throws JavaModelException {
+	private PerforatedLoop findLoop(Shell shell, CompilationUnit cu, ICompilationUnit icu, ASTNode node) throws JavaModelException, PerforationException {
 		LoopVisitor visitor = new LoopVisitor();
 		node.accept(visitor);
 
@@ -124,73 +125,35 @@ public class JavaPerforation {
 				MessageDialog.openError(shell, "Multiple loops found", "Only the first loop was perforated.");
 				break;
 			}
-			extractFor(stmt, cu, icu);
-			loops.add(new PerforatedLoop(stmt, 2));
-			found = true;
+			return extractFor(stmt, cu, icu);
 		}
-		if (!found) {
-			MessageDialog.openError(shell, "No loops within selection", "The selected text must contain at least one for loop.");
-		}
+		MessageDialog.openError(shell, "No loops within selection", "The selected text must contain at least one for loop.");
+		return null;
 	}
 
 	@SuppressWarnings("restriction")
-	public void extractFor(ForStatement stmt, CompilationUnit cu, ICompilationUnit icu) {
-		ASTNode parentMethod = stmt.getParent();
-		int start = stmt.getStartPosition();
-		int length = stmt.getLength();
-		int dlength = 0;
-
-	    try {
-	        // creation of ASTRewrite
-	        Document document= new Document(icu.getSource());
-	        ASTRewrite rewrite = ASTRewrite.create(cu.getAST());
-
-	        // description of the change
-	        List<ASTNode> updaters = (List<ASTNode>) stmt.getStructuralProperty(ForStatement.UPDATERS_PROPERTY);
-	        for (ASTNode updater : updaters) {
-	        	if (updater instanceof PostfixExpression) {
-	        		PostfixExpression pfe = (PostfixExpression)updater;
-	        		Assignment replacement = cu.getAST().newAssignment();
-	        		replacement.setLeftHandSide(cu.getAST().newSimpleName(((SimpleName)pfe.getStructuralProperty(PostfixExpression.OPERAND_PROPERTY)).getIdentifier()));
-	        		if (pfe.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
-	        			replacement.setOperator(Assignment.Operator.PLUS_ASSIGN);
-	        		}
-	        		else {
-	        			replacement.setOperator(Assignment.Operator.MINUS_ASSIGN);
-	        		}
-	        		replacement.setRightHandSide(cu.getAST().newNumberLiteral("2"));
-	        		rewrite.replace(updater, replacement, null);
-	        		dlength += updater.getLength() - replacement.getLength();
-	        	}
-	        	// @TODO
-	        }
-	        // computation of the text edits
-	        TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
-
-	        // computation of the new source code
-	        edits.apply(document);
-	        String newSource = document.get();
-
-	        // update of the compilation unit
-	        icu.getBuffer().setContents(newSource);
-	        //icu.becomeWorkingCopy(new NullProgressMonitor());
-
-			ExtractMethodRefactoring emRefactor = new ExtractMethodRefactoring(icu, start, length + dlength);
-			emRefactor.setMethodName("extractedPerforation" + this.loops.size());
-
-			NullProgressMonitor pm = new NullProgressMonitor();
-	        emRefactor.checkAllConditions(pm);
-	        Change change = emRefactor.createChange(pm);
-	        change.perform(pm);
-	    } catch (Exception e) {e.printStackTrace();}
+	public PerforatedLoop extractFor(ForStatement stmt, CompilationUnit cu, ICompilationUnit icu) throws PerforationException {
+		PerforatedLoop loop = PerforatedLoop.perforate(stmt, cu, icu);
+		loops.add(loop);
+		return loop;
 	}
 
 	private class JavaPerforationVisitor extends ASTVisitor {
+		List<PerforatedLoop> loops = new ArrayList<PerforatedLoop>();
 
 		public List<PerforatedLoop> getLoops() {
-			// TODO Auto-generated method stub
-			return new ArrayList<PerforatedLoop>();
+			return loops;
 		}
-		
+
+		// TODO: This works but is suboptimal - should just check methods with the annotation.
+		public boolean visit(ForStatement node) {
+			try {
+				PerforatedLoop loop = new PerforatedLoop(node);
+				loops.add(loop);
+			} catch (PerforationException e) {
+				// Not a perforated loop, move along.
+			}
+			return super.visit(node);
+		}
 	}
 }

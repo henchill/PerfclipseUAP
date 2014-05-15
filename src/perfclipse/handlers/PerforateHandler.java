@@ -48,6 +48,8 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ltk.core.refactoring.Change;
 
 import perfclipse.perforations.JavaPerforation;
+import perfclipse.perforations.PerforatedLoop;
+import perfclipse.perforations.PerforationException;
 
 public class PerforateHandler extends AbstractHandler {
 	@Override
@@ -66,25 +68,24 @@ public class PerforateHandler extends AbstractHandler {
 		    JavaPerforation jp;
 			try {
 				jp = JavaPerforation.getPerforation(project, shell);
-				jp.perforateLoop(sel, editor);
+				PerforatedLoop pl = jp.perforateLoop(sel, editor);
+				if (pl == null) {
+					return null;
+				}
+				ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
+		        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
+				try {
+					pl.setFactor(2, icu);
+				} catch (PerforationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			} catch (CoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 	    }
 	    return null;
-	    /*ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
-        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
-        CompilationUnit cu = parse(icu);
-        NodeFinder finder = new NodeFinder(cu, sel.getOffset(), sel.getLength());
-        ASTNode node = finder.getCoveringNode();
-        try {
-			findLoops(shell, icu, node);
-		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	    return null;*/
 	}
 
     private ITextSelection getITextSelection(ITextEditor textEditor) {
