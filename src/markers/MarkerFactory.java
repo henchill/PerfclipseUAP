@@ -2,6 +2,7 @@ package markers;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
@@ -22,12 +23,12 @@ import org.eclipse.ui.texteditor.SimpleMarkerAnnotation;
 
 public class MarkerFactory {
 	
-	public static final HashMap<String, String> markerMap;// = new HashMap<String, String>();
+	public static final Map<String, String> markerMap;// = new HashMap<String, String>();
 	static {
 		HashMap<String, String> tmp = new HashMap<String, String>();
 		tmp.put("GREENMARKER", "Perfclipse.greenMarker");
 		tmp.put("GREENANNOTATION", "Perfclipse.greenAnnotation");
-		markerMap = (HashMap<String, String>) Collections.unmodifiableMap(tmp);
+		markerMap = Collections.unmodifiableMap(tmp);
 	}
 	
 	public static IMarker createMarker(IResource res, String markerName, String msg, Position position) throws CoreException {

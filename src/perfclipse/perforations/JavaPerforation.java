@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -131,8 +132,20 @@ public class JavaPerforation {
 				MessageDialog.openError(shell, "Multiple loops found", "Only the first loop was perforated.");
 				break;
 			}
-			extractFor(stmt, cu, icu);
-			loops.add(new PerforatedLoop(stmt, 2));
+			PerforatedLoop loop = new PerforatedLoop(stmt, 2);
+			String methodName = "extractedPerforation" + this.loops.size();
+			ICompilationUnit new_icu = extractFor(stmt, cu, icu);
+			CompilationUnit new_cu = parse(new_icu);
+			MethodVisitor methodVisitor = new MethodVisitor();
+			new_cu.accept(methodVisitor);
+			for (MethodDeclaration md : methodVisitor.getMethods()) {
+				if (md.getName().toString().equals(methodName)) {
+					loop.setExtractedMethod(md);
+					break;
+				}
+			}
+			
+			loops.add(loop);
 			found = true;
 		}
 		if (!found) {
@@ -141,12 +154,11 @@ public class JavaPerforation {
 	}
 
 	@SuppressWarnings("restriction")
-	public void extractFor(ForStatement stmt, CompilationUnit cu, ICompilationUnit icu) {
+	public ICompilationUnit extractFor(ForStatement stmt, CompilationUnit cu, ICompilationUnit icu) {
 		ASTNode parentMethod = stmt.getParent();
 		int start = stmt.getStartPosition();
 		int length = stmt.getLength();
-		int dlength = 0;
-
+		int dlength = 0;		
 	    try {
 	        // creation of ASTRewrite
 	        Document document= new Document(icu.getSource());
@@ -184,12 +196,14 @@ public class JavaPerforation {
 
 			ExtractMethodRefactoring emRefactor = new ExtractMethodRefactoring(icu, start, length + dlength);
 			emRefactor.setMethodName("extractedPerforation" + this.loops.size());
-
+			
 			NullProgressMonitor pm = new NullProgressMonitor();
 	        emRefactor.checkAllConditions(pm);
 	        Change change = emRefactor.createChange(pm);
 	        change.perform(pm);
+	        return icu;
 	    } catch (Exception e) {e.printStackTrace();}
+	    return null;
 	}
 
 	private class JavaPerforationVisitor extends ASTVisitor {

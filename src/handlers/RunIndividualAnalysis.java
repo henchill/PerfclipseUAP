@@ -59,37 +59,41 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    PerforationInfoDialog dialog = new PerforationInfoDialog(shell);
 	    dialog.create();
 	    if (dialog.open() == Window.OK) {
-	    	String project = dialog.getProjectName();
-	    	String main = dialog.getMainClass();
-	    	String eval = dialog.getEvalClass();
+	    	String project = "SomeProject1"; //dialog.getProjectName();
+	    	String main = "SomeProject1.src.TestClass.main"; //dialog.getMainClass();
+	    	String eval = "SomeProject1.src.EvaluateFunc"; //dialog.getEvalClass();
 	    	IProject iProject = PerforationLaunch.getProject(project);
-	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
+//	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
 	    	List<Results> results = new ArrayList<Results>();
 	    	
 	    	if (iProject != null) { // && eval class is correct
 	    		PerforationLaunch pl = new PerforationLaunch();
 	    		try {
 					results.add(pl.runUnperforated(project, main, eval));
+					System.out.println(results);
 				} catch (CoreException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-	    		
+	    		/*
 	    		JavaPerforation jp;
 		    	try {
 		    		jp = JavaPerforation.getPerforation(iProject, shell);
 					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
+					System.out.println(loops.size());
 					if (loops != null) {
 						for (PerforatedLoop loop : loops) {
-							loop.setFactor(0);
+//							loop.setFactor(0);
 						}
 						for (PerforatedLoop loop : loops) {
-							loop.setFactor();
-							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
-							tmp.add(loop);
-							Results res = pl.runPerforated(iProject, main, eval, tmp);
-							results.add(res);
-							loop.setFactor(0);
+//							loop.setFactor();
+//							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
+//							tmp.add(loop);
+							Results res = new Results();//pl.runPerforated(iProject, main, eval, tmp);
+							res.QualityOfService = .9;
+							res.ElapsedTime = System.currentTimeMillis();
+//							results.add(res);
+//							loop.setFactor(0);
 							// TODO Add if statement for marker
 							loop.addMarker("GREENMARKER", "GREENANNOTATION", res);
 							// add anotation with qos and time performance.
@@ -98,7 +102,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 				} catch (CoreException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
+				}*/
 		    	recordResults(results);
 	    	} else {
 	    		MessageDialog.openError(shell, "Class Selection Error", "Could not find the specified project or evaluation class");
@@ -124,7 +128,9 @@ public class RunIndividualAnalysis extends AbstractHandler {
 		    writer.append('\n');
 		    
 		    for (Results result : results) {
-		    	writer.append(result.PerforatedLoops.get(0).getName());
+		    	if (result.PerforatedLoops.size() > 0) {
+		    		writer.append(result.PerforatedLoops.get(0).getName());
+		    	}
 		    	writer.append(',');
 		    	writer.append((String) result.QualityOfService);
 		    	writer.append(',');
