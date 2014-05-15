@@ -111,28 +111,34 @@ public class PerforatedLoop {
 			NullProgressMonitor pm = new NullProgressMonitor();
 			RefactoringStatus rs = emRefactor.checkAllConditions(pm);
 			int i = 0;
-			while (!rs.isOK()) {
+			while (!rs.isOK() && i < 20) {
 				methodName = methodNameBase + i;
 				emRefactor.setMethodName(methodName);
 				rs = emRefactor.checkAllConditions(pm);
 				i++;
 			}
 
-	        Change change = emRefactor.createChange(pm);
-	        change.perform(pm);
+			try {
+		        Change change = emRefactor.createChange(pm);
+		        change.perform(pm);
+			} catch (NullPointerException e) {
+				throw new PerforationException("Multiple output variables from this for loop.");
+			}
 	        cu = JavaPerforation.parse(icu);
 	        MethodDeclaration newMethod = findMethod(cu, methodName);
 	        addAnnotation(newMethod, cu, icu);
 	        cu = JavaPerforation.parse(icu);
 	        newMethod = findMethod(cu, methodName);
 	        Block block = (Block)newMethod.getStructuralProperty(MethodDeclaration.BODY_PROPERTY);
-	        ASTNode first = (ASTNode)block.statements().get(0);
-	        if (!(first instanceof ForStatement)) {
-	        	throw new PerforationException("Cannot find extracted for statement.");
+	        int j = 0;
+	        while (j < block.statements().size()) {
+		        ASTNode topLevel = (ASTNode)block.statements().get(j);
+		        if (topLevel instanceof ForStatement) {
+		        	return new PerforatedLoop((ForStatement)topLevel);
+		        }
+		        j++;
 	        }
-	        else {
-	        	return new PerforatedLoop((ForStatement)first);
-	        }
+        	throw new PerforationException("Cannot find extracted for statement.");
 	    } catch (Exception e) { throw new PerforationException(e); }
 	}
 
@@ -281,6 +287,25 @@ public class PerforatedLoop {
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
+
+        this.factor = factor;
+        this.reparse(icu, method.getName().getFullyQualifiedName());
+	}
+
+	private CompilationUnit reparse(ICompilationUnit icu, String methodName) throws PerforationException {
+		CompilationUnit cu = JavaPerforation.parse(icu);
+        this.method = findMethod(cu, methodName);
+        Block block = (Block)this.method.getStructuralProperty(MethodDeclaration.BODY_PROPERTY);
+        int j = 0;
+        while (j < block.statements().size()) {
+	        ASTNode topLevel = (ASTNode)block.statements().get(j);
+	        if (topLevel instanceof ForStatement) {
+	        	this.node = (ForStatement)topLevel;
+	        	return cu;
+	        }
+	        j++;
+        }
+    	throw new PerforationException("Cannot find extracted for statement."); 
 	}
 
 	private static class MethodFinder extends ASTVisitor {

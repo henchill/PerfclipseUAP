@@ -76,6 +76,7 @@ public class PerforateHandler extends AbstractHandler {
 		        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
 				try {
 					pl.setFactor(2, icu);
+					pl.setFactor(3, icu);
 				} catch (PerforationException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
