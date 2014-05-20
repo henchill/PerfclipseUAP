@@ -68,7 +68,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    dialog.create();
 	    if (dialog.open() == Window.OK) {
 	    	String project = "SomeProject1"; //dialog.getProjectName();
-	    	String main = "SomeProject1.src.TestClass.main"; //dialog.getMainClass();
+	    	String main = "SomeProject1.src.TestClass"; //dialog.getMainClass();
 	    	String eval = "SomeProject1.src.EvaluateFunc"; //dialog.getEvalClass();
 	    	IProject iProject = PerforationLaunch.getProject(project);
 //	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
@@ -94,7 +94,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 								
 					for (PerforatedLoop loop : loops) {
 							try {
-								loop.setFactor(0, loop.getCompilationUnit());
+								loop.setFactor(1, loop.getCompilationUnit());
 							} catch (PerforationException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -117,7 +117,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 						results.add(res);
 						System.out.println(results.toString());
 						try {
-							loop.setFactor(0, loop.getCompilationUnit());
+							loop.setFactor(1, loop.getCompilationUnit());
 						} catch (PerforationException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();

@@ -13,10 +13,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 public class PerforationTypeDialog extends TitleAreaDialog {
-	private Text iterToKeepText;
+	private Text methodTxt;
 	private Text txtFactor;
 	
-	private String iterNum;
+	private String methodName;
 	private String perfFactor;
 	
 	public PerforationTypeDialog(Shell parentShell) {
@@ -39,7 +39,7 @@ public class PerforationTypeDialog extends TitleAreaDialog {
 	    container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	    container.setLayout(layout);
 
-	    createIterToKeep(container);
+	    //createIterToKeep(container);
 	    createFactor(container);
 
 	    return area;
@@ -59,13 +59,13 @@ public class PerforationTypeDialog extends TitleAreaDialog {
 	
 	private void createIterToKeep(Composite container) {
 	    Label lblIterToKeep = new Label(container, SWT.NONE);
-	    lblIterToKeep.setText("Iterations to Keep");
+	    lblIterToKeep.setText("Method Name");
 	    
 	    GridData dataIterToKeep = new GridData();
 	    dataIterToKeep.grabExcessHorizontalSpace = true;
 	    dataIterToKeep.horizontalAlignment = GridData.FILL;
-	    iterToKeepText = new Text(container, SWT.BORDER);
-	    iterToKeepText.setLayoutData(dataIterToKeep);
+	    methodTxt = new Text(container, SWT.BORDER);
+	    methodTxt.setLayoutData(dataIterToKeep);
 	}
 	
 	@Override
@@ -74,7 +74,7 @@ public class PerforationTypeDialog extends TitleAreaDialog {
 	}
 	
 	private void saveInput() {
-		iterNum = iterToKeepText.getText();
+//		methodName = methodTxt.getText();
 		perfFactor = txtFactor.getText();
 	}
 	
@@ -82,10 +82,6 @@ public class PerforationTypeDialog extends TitleAreaDialog {
 	protected void okPressed() {
 	  saveInput();
 	  super.okPressed();
-	}
-
-	public String getIterationNumber() {
-		return iterNum;
 	}
 
 	public String getFactor() {
@@ -104,4 +100,8 @@ public class PerforationTypeDialog extends TitleAreaDialog {
 	  protected Point getInitialSize() {
 	    return new Point(450, 300);
 	  }
+
+	public String getMethodName() {
+		return methodName;
+	}
 }

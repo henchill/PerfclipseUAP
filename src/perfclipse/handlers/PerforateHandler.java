@@ -14,26 +14,10 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.LineComment;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.NodeFinder;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
-import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.jdt.ui.JavaUI;
@@ -47,6 +31,7 @@ import org.eclipse.jdt.internal.corext.refactoring.code.ExtractMethodRefactoring
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ltk.core.refactoring.Change;
 
+import perfclipse.PerforationTypeDialog;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 import perfclipse.perforations.PerforationException;
@@ -63,28 +48,33 @@ public class PerforateHandler extends AbstractHandler {
 	    	MessageDialog.openError(shell, "No loops selected", "You must select a loop you want to perforate.");
 	    }
 	    else {
-	    	IEditorPart iep = HandlerUtil.getActiveEditor(event);
-		    IProject project = file.getProject();
-		    JavaPerforation jp;
-			try {
-				jp = JavaPerforation.getPerforation(project, shell);
-				PerforatedLoop pl = jp.perforateLoop(sel, editor);
-				if (pl == null) {
-					return null;
-				}
-				ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
-		        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
+	    	PerforationTypeDialog dialog = new PerforationTypeDialog(shell);
+		    dialog.create();
+		    if (dialog.open() == Window.OK) {
+		    	String factor = dialog.getFactor();		    	
+		    	IEditorPart iep = HandlerUtil.getActiveEditor(event);
+			    IProject project = file.getProject();
+			    JavaPerforation jp;
 				try {
-					pl.setFactor(2, icu);
-					pl.setFactor(3, icu);
-				} catch (PerforationException e) {
+					jp = JavaPerforation.getPerforation(project, shell);
+					PerforatedLoop pl = jp.perforateLoop(sel, editor);
+					if (pl == null) {
+						return null;
+					}
+					ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
+			        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
+					try {
+						pl.setFactor(Integer.parseInt(factor), icu);
+						
+					} catch (PerforationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} catch (CoreException e1) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					e1.printStackTrace();
 				}
-			} catch (CoreException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+		    }
 	    }
 	    return null;
 	}

@@ -49,8 +49,7 @@ import perfclipse.perforations.JavaPerforation;
 
 public class PerforateHandler extends AbstractHandler {
 	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		System.out.println("got here");
+	public Object execute(ExecutionEvent event) throws ExecutionException {		
 		Shell shell = HandlerUtil.getActiveShell(event);
 	    ITextEditor editor = (ITextEditor) HandlerUtil.getActiveEditor(event);
 	    ITextSelection sel = getITextSelection(editor);
@@ -72,18 +71,6 @@ public class PerforateHandler extends AbstractHandler {
 			}
 	    }
 	    return null;
-	    /*ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
-        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
-        CompilationUnit cu = parse(icu);
-        NodeFinder finder = new NodeFinder(cu, sel.getOffset(), sel.getLength());
-        ASTNode node = finder.getCoveringNode();
-        try {
-			findLoops(shell, icu, node);
-		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	    return null;*/
 	}
 
     private ITextSelection getITextSelection(ITextEditor textEditor) {

@@ -216,8 +216,7 @@ public class PerforatedLoop {
 		// creation of ASTRewrite
         Document document;
 		try {
-			document = new Document(icu.getSource());
-			System.out.println(icu.getSource());
+			document = new Document(icu.getSource());	
 		} catch (JavaModelException e1) {
 			e1.printStackTrace();
 			throw new PerforationException("Could not parse document to Java model.");
@@ -363,10 +362,9 @@ public class PerforatedLoop {
 	
 	public void addMarker(String markerName, String annotation, Results result) {
 		String msg = "Perforation Results: QOS = %s; Speedup = %s";
-		msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.ElapsedTime));
+		msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.Speedup));
 		Position position = new Position(this.method.getStartPosition(),
 										 this.method.getLength());
-		System.out.println(this.node.getParent().getStartPosition() + "---" + node.getStartPosition());
 		try {
 			CompilationUnit cu = (CompilationUnit) this.node.getRoot();
 			IJavaElement element = cu.getJavaElement();
@@ -382,7 +380,7 @@ public class PerforatedLoop {
 	}
 	
 	public ICompilationUnit getCompilationUnit() {
-		CompilationUnit cu = (CompilationUnit) this.method.getParent().getRoot();
+		CompilationUnit cu = (CompilationUnit) this.method.getRoot();
 		
 		IJavaElement element = cu.getJavaElement();
 		if (element instanceof ICompilationUnit) {

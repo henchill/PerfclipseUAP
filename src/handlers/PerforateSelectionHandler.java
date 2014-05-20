@@ -28,7 +28,7 @@ public class PerforateSelectionHandler extends AbstractHandler {
 	    PerforationTypeDialog dialog = new PerforationTypeDialog(shell);
 	    dialog.create();
 	    if (dialog.open() == Window.OK) {
-	    	System.out.println(dialog.getIterationNumber());
+//	    	System.out.println(dialog.getIterationNumber());
 	    	System.out.println(dialog.getFactor());
 	    }
 	    System.out.println("Execute Perforate Loop");
