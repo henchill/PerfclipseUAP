@@ -8,6 +8,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.Launch;
@@ -24,16 +25,11 @@ import perfclipse.perforations.PerforatedLoop;
 
 public class PerforationLaunch {
 	
-	public Results runUnperforated(String proj, String main, String evalClass) throws CoreException{
-		IProject project = PerforationLaunch.getProject(proj);
-		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(project);
-		for (PerforatedLoop loop : loops){
-			// loop.setfactor(0);
-		}
+	public Results runUnperforated(IProject project, String main, String evalClass) throws CoreException{		
 		Results result = new Results();
 		long elapsedTime = launch(JavaCore.create(project), main);
 
-		result.QualityOfService = (double) .99;
+		result.QualityOfService = .15;
 		
 		result.RunName = String.format("UnPerforatedRun-%s", project.getName());
 		result.ElapsedTime = elapsedTime;
@@ -44,11 +40,10 @@ public class PerforationLaunch {
 	public Results runPerforated(IProject project, String main, String evalClass, List<PerforatedLoop> loops) throws CoreException {		
 		Results result = new Results();
 		long elapsedTime = launch(JavaCore.create(project), main);
-//		Object qos;
-
+//		PerforationEvaluation pe = getEvalObject(evalClass);
 //		qos = PerforationLaunch.getEvalObject(evalClass).evaluate();
-		result.QualityOfService = (double) .99;
-		result.RunName = "PerforatedRun-%s".format(project.getName());
+		result.QualityOfService = 0.4; //pe.evaluate();
+		result.RunName = String.format("PerforatedRun-%s", project.getName());
 		result.ElapsedTime = elapsedTime;
 		result.PerforatedLoops = loops;
 		return result;		
@@ -56,13 +51,15 @@ public class PerforationLaunch {
 	
 	private long launch(IJavaProject proj, String main) throws CoreException {
 		IVMInstall vm = JavaRuntime.getVMInstall(proj);
+		System.out.println(vm.toString());
 		if (vm == null) vm = JavaRuntime.getDefaultVMInstall();
 		IVMRunner vmr = vm.getVMRunner(ILaunchManager.RUN_MODE);
 		String[] cp = JavaRuntime.computeDefaultRuntimeClassPath(proj);
+		System.out.println(cp);
 		VMRunnerConfiguration config = new VMRunnerConfiguration(main, cp);
 		ILaunch launch = new Launch(null, ILaunchManager.RUN_MODE, null);
 		long startTime = System.currentTimeMillis();
-		vmr.run(config, launch, null);
+		vmr.run(config, launch, new NullProgressMonitor());
 		long endTime = System.currentTimeMillis();
 		return endTime - startTime;
 	}
@@ -87,7 +84,6 @@ public class PerforationLaunch {
 	    IProject[] projects = root.getProjects();
 	    for (IProject project : projects) {	    	
 	    	if (project.getName().equals(projectName)) {
-	    		System.out.println(project.getName() + "---" + projectName);
 	    		return project;
 	    	}
 	    }

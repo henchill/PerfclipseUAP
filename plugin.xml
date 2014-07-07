@@ -33,13 +33,18 @@
                   label="Individual Loop Analysis"
                   style="push">
             </command>
+            <command
+                  commandId="Perfclipse.commands.extractLoop"
+                  label="Extract Loop"
+                  style="push">
+            </command>
          </menu>
       </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="perfclipse.handlers.PerforateHandler"
+            class="handlers.PerforateSelectionHandler"
             commandId="Perfclipse.commands.perforateSelection">
       </handler>
       <handler
@@ -53,6 +58,10 @@
       <handler
             class="perfclipse.ViewResults"
             commandId="Perfclipse.commands.viewResults">
+      </handler>
+      <handler
+            class="handlers.ExtractLoopHandler"
+            commandId="Perfclipse.commands.extractLoop">
       </handler>
    </extension>
    <extension
@@ -83,6 +92,11 @@
             categoryId="Perfclipse.commands.codePerforationCategory"
             id="Perfclipse.commands.viewResults"
             name="View Results">
+      </command>
+      <command
+            category="Code Perforation"
+            id="Perfclipse.commands.extractLoop"
+            name="Extract Loop">
       </command>
    </extension>
    <extension

@@ -34,7 +34,7 @@ public class LoopSelectionWizard extends WizardPage {
 	protected LoopSelectionWizard() {
 		super("Loop Selection");
 		setTitle("Loop Selection");
-		setDescription("Which marked loops should be perforated");		
+		setDescription("Which marked loops should be perforated");
 	}
 	
 	private void checkPath(TreeItem item, boolean checked, boolean grayed) {
@@ -58,7 +58,7 @@ public class LoopSelectionWizard extends WizardPage {
 	    checkPath(item.getParentItem(), checked, grayed);
 	}
 	
-	static void checkItems(TreeItem item, boolean checked) {
+	private void checkItems(TreeItem item, boolean checked) {
 	    item.setGrayed(false);
 	    item.setChecked(checked);
 	    TreeItem[] items = item.getItems();
@@ -67,10 +67,9 @@ public class LoopSelectionWizard extends WizardPage {
 	    }
 	}
 	
-	
-
 	@Override
 	public void createControl(Composite parent) {
+		System.out.println("executed create control");
 		container = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
@@ -90,6 +89,7 @@ public class LoopSelectionWizard extends WizardPage {
 	    });
 	    
 	    buildTree();
+	    System.out.println("tree built");
 	    
 	    GridData gd = new GridData(GridData.FILL_BOTH);
 	    tree.setLayoutData(gd);
@@ -99,12 +99,16 @@ public class LoopSelectionWizard extends WizardPage {
 	}
 	
 	private void buildTree() {
+		System.out.println("Building Tree");
 		ClassSelection page = (ClassSelection) this.getWizard().getPage("Class Selection");
 		String projectName = page.getProjectText();
+		System.out.println("ProjectName: " + projectName);
 		IProject iProject = PerforationLaunch.getProject(projectName);
+		System.out.println(iProject == null);
 		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
-		HashMap<String, ArrayList<PerforatedLoop>> classMap = new HashMap<String, ArrayList<PerforatedLoop>>();
+		HashMap<String, List<PerforatedLoop>> classMap = new HashMap<String, List<PerforatedLoop>>();
 		for (PerforatedLoop loop : loops) {
+			System.out.println("Executing: " + loop.getName());
 			String className = loop.getName().split("-")[0];
 			classMap.get(className).add(loop); 
 		}

@@ -59,7 +59,7 @@ public class RunPerforationWizard extends Wizard {
 			try {
 				PerforationLaunch pl = new PerforationLaunch();
 				results = new ArrayList<Results>(); 
-				results.add(pl.runUnperforated(project, main, eval));
+//				results.add(pl.runUnperforated(project, main, eval));
 				results.add(runPerforated(project, main, eval));				
 				
 			}

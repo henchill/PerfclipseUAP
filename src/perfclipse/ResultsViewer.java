@@ -6,32 +6,37 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.Text;
+
+import perfclipse.perforations.PerforatedLoop;
 
 public class ResultsViewer extends Dialog{
 	private Shell shell;
 	private Display display;
 	private TableViewer viewer;
+	private Results original;
+	private Results perforated;
+	private GridData openPerfData;
+	
 	public ResultsViewer(Shell parent) {
 		super(parent);
 	}
-	
-//	@Override
-//	protected void setShellStyle(int arg0) 
-//	{
-//		//Use the following so that no close X button will be created in the dialog
-//		super.setShellStyle(SWT.TITLE);
-//	}
 	
 	@Override
 	protected Control createDialogArea(Composite composite) 
@@ -39,73 +44,182 @@ public class ResultsViewer extends Dialog{
 		Composite area = (Composite) super.createDialogArea(composite);
 	    Composite container = new Composite(area, SWT.NONE);
 	    container.setLayoutData(new GridData(GridData.FILL_BOTH));
-	    GridLayout layout = new GridLayout(4, false);
+	    GridLayout layout = new GridLayout(1, false);
 	    container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	    container.setLayout(layout);
-
 	    
-		createResultsList(container);
+	    createResultsView(container);
 		createComparisonView(container);
 		getShell().setText("Results Viewer");
-		/*
-		 * Create your custome UI.
-		 * Place all your UI components here
-		 */
 		return composite;
 	}
 	
-	private void tmp() {
-		display = new Display();
-		this.shell = new Shell(display);
+	private void createResultsView(Composite container) {
+		Label origInfo = new Label(container, SWT.SINGLE | SWT.WRAP | SWT.BORDER | SWT.LEFT);
+		origInfo.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
+		origInfo.setText(buildStringOutput(perforated));
 		
-		GridLayout layout = new GridLayout(4, false);
-		shell.setLayout(layout);
-		
-		
-		
+		GridData origInfoData = new GridData();
+		origInfoData.horizontalAlignment = SWT.FILL;				
+		origInfoData.grabExcessHorizontalSpace = true;		
+		origInfo.setLayoutData(origInfoData);
 	}
 	
-	private void createResultsView(Composite container) {
-		TableViewer sidebyside = new TableViewer(container);        
-        
-		TableViewerColumn left = new TableViewerColumn(sidebyside, SWT.NONE);
-		TableViewerColumn right = new TableViewerColumn(sidebyside, SWT.NONE);
-		final Table table = sidebyside.getTable();
-		
-		table.setHeaderVisible(false);
-		table.setLinesVisible(true); 
-		GridData dataList = new GridData();
-		dataList.horizontalAlignment = GridData.FILL;
-		dataList.horizontalSpan = 3;
-		table.setLayoutData(dataList);		  
-
+	public void setResults (Results orig, Results perf){
+		original = orig;
+		perforated = perf;
 	}
 	
 	private Control createListView() {
-		
 		return null;
 	}
 
+	private String openDialog(Shell shell) {
+		// File standard dialog
+	    FileDialog fileDialog = new FileDialog(shell);
+	    // Set the text
+	    fileDialog.setText("Select File");
+	    // Set filter on .txt files
+	    fileDialog.setFilterExtensions(new String[] { "*.jpg", "*.jpeg", "*.png" });
+	    // Put in a readable name for the filter
+//	    fileDialog.setFilterNames(new String[] { "Textfiles(*.txt)" });
+	    // Open Dialog and save result of selection
+	    String selected = fileDialog.open();
+	    return selected;
+	}
 	private Control createComparisonView(Composite container) {
-//		?Image image = new Image(shell.getDisplay(), "/Perfclipse/icons/sample.gif");
-		Label leftImgLabel = new Label(container, SWT.BORDER);
-		leftImgLabel.setText("Image goes here");
+		final Composite comp = new Composite(container, SWT.NONE);
+		comp.setLayoutData(new GridData(GridData.FILL_BOTH | SWT.CENTER));
+		GridLayout layout = new GridLayout(2, false);
+//		layout.marginLeft = 40;
+//		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		comp.setLayout(layout);
 		
-		GridData leftImgData = new GridData(SWT.FILL, 
-                SWT.FILL, true, true,
-                1, 1);
-		leftImgLabel.setLayoutData(leftImgData);
+		Button openOrig = new Button(comp, SWT.PUSH | SWT.CENTER);
+		openOrig.setText("Add Original Output");
+		openOrig.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Shell shell = comp.getShell();
+				openDialog(shell);
+			}
+		});
 		
-//		Image r_image = new Image(shell.getDisplay(), "/Perfclipse/icons/sample.gif");
-		Label rightImgLabel = new Label(container, SWT.BORDER);
-		rightImgLabel.setText("Image goes here");
+		GridData openOrigData = new GridData(SWT.CENTER);
+		openOrigData.horizontalAlignment = SWT.FILL;		
+		openOrigData.horizontalSpan = 1;
+		openOrigData.grabExcessHorizontalSpace = true;
+		openOrig.setLayoutData(openOrigData);
+
+		final Button openPerf = new Button(comp, SWT.PUSH | SWT.CENTER);
+		openPerf.setText("Add Perforated Output");
+		openPerfData = new GridData(SWT.CENTER);
+		openPerfData.horizontalAlignment = SWT.FILL;
+		openPerfData.horizontalSpan = 1;
+		openPerfData.grabExcessHorizontalSpace = true;
+		openPerf.setLayoutData(openPerfData);
 		
-		GridData rightImgData = new GridData(SWT.FILL, 
-                SWT.FILL, true, true,
-                1, 1);
-		rightImgLabel.setLayoutData(rightImgData);
+		final Label origImg = new Label(comp, SWT.CENTER);
+//		origImg.setText("something");
+		GridData origImgData = new GridData(SWT.CENTER);
+		origImgData.horizontalSpan = 1;
+		origImgData.horizontalAlignment = SWT.FILL;
+		origImgData.verticalAlignment = SWT.FILL;
+		origImgData.grabExcessHorizontalSpace = true;
+		origImgData.grabExcessVerticalSpace = true;
+		origImg.setLayoutData(origImgData);
 		
+		final Label perfImg = new Label(comp, SWT.CENTER);
+//		perfImg.setText("test");
+		GridData perfImgData = new GridData(SWT.CENTER);
+		perfImgData.horizontalSpan = 1;
+		perfImgData.horizontalAlignment = SWT.FILL;
+		perfImgData.verticalAlignment = SWT.FILL;
+		perfImgData.grabExcessHorizontalSpace = true;
+		perfImgData.grabExcessVerticalSpace = true;
+		perfImg.setLayoutData(perfImgData);
+		
+		openPerf.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Shell shell = comp.getShell();
+				String selected = openDialog(shell);
+//				createImgLabel(selected);
+				if (selected != null) {					
+					Image originalImage = new Image(shell.getDisplay(), selected);
+					
+					Rectangle imgBounds = originalImage.getBounds();
+					Rectangle labelBounds = perfImg.getBounds();
+					double widthScale = ((double) labelBounds.width) / imgBounds.width;
+					double heightScale = ((double) labelBounds.height) / imgBounds.height;
+					double factor = 1.0;
+					if (widthScale < 1 && heightScale < 1) {
+						factor = widthScale > heightScale ? heightScale : widthScale;
+					} else if (widthScale < 1) {
+						factor = widthScale;
+					} else if (heightScale < 1) {
+						factor = heightScale;
+					}
+					Image finalImg = new Image(shell.getDisplay(),
+							originalImage.getImageData().scaledTo((int) (imgBounds.width * factor), 
+									(int) (imgBounds.height * factor)));
+					perfImg.setImage(finalImg);
+				}
+//				openPerf.dispose(); 
+			}
+		});
+		
+		openOrig.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Shell shell = comp.getShell();
+				String selected = openDialog(shell);
+//				createImgLabel(selected);
+				if (selected != null) {					
+					Image originalImage = new Image(shell.getDisplay(), selected);
+					
+					Rectangle imgBounds = originalImage.getBounds();
+					Rectangle labelBounds = perfImg.getBounds();
+					double widthScale = labelBounds.width / imgBounds.width;
+					double heightScale = labelBounds.height / imgBounds.height;
+					double factor = 1.0;
+					if (widthScale < 1 && heightScale < 1) {
+						factor = widthScale > heightScale ? heightScale : widthScale;
+					} else if (widthScale < 1) {
+						factor = widthScale;
+					} else if (heightScale < 1) {
+						factor = heightScale;
+					}
+					Image finalImg = new Image(shell.getDisplay(),
+							originalImage.getImageData().scaledTo((int) (imgBounds.width * factor), 
+									(int) (imgBounds.height * factor)));
+					origImg.setImage(finalImg);
+				}
+//				openPerf.dispose(); 
+			}
+		});
+
 		return null;
+	}
+
+	private String buildStringOutput(Results result) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Perforated Results\n");
+		sb.append("Quality of Service: ");
+		sb.append(result.QualityOfService);
+		sb.append("\n");
+		sb.append("SpeedUp: ");
+		sb.append(result.Speedup);
+		sb.append("\n");
+		sb.append("Perforated Loops: [");
+		for (PerforatedLoop loop: result.PerforatedLoops) {			
+			sb.append(loop.getClassName());
+			sb.append("/");
+			sb.append(loop.getName());
+			sb.append(", ");
+		}
+		sb.append("]");
+		return sb.toString();
 	}
 
 	private void createResultsList(Composite container) {
@@ -129,7 +243,7 @@ public class ResultsViewer extends Dialog{
 	
 	@Override
 	protected boolean isResizable() {
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -140,7 +254,7 @@ public class ResultsViewer extends Dialog{
 	
 	@Override  
 	protected Point getInitialSize() {
-	    return new Point(450, 300);
+	    return new Point(500, 400);
 	}
 
 }

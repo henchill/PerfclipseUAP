@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
@@ -39,6 +40,7 @@ import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
@@ -56,29 +58,35 @@ public class PerforatedLoop {
 	private final static String PERFORATED_CLASS = "perfclipse.annotations.Perforated";
 	private MethodDeclaration method;
 	private ForStatement node;
+	private int storedFactor; 
 	private int factor;
 	public PerforatedLoop(ForStatement node) throws PerforationException {
 		this.node = node;
 		this.factor = 1;
 		ASTNode method = node.getParent().getParent();
-		if (method instanceof MethodDeclaration) {
+		if (method instanceof MethodDeclaration) {			
 			this.method = (MethodDeclaration)method;
 			List<ASTNode> modifiers = (List<ASTNode>)method.getStructuralProperty(MethodDeclaration.MODIFIERS2_PROPERTY);
-			boolean prePerforated = false;
+			boolean prePerforated = false;			
 			for (ASTNode modifier : modifiers) {
-				if (modifier instanceof Annotation) {
-					Annotation annotation = (Annotation) modifier;
-					Name annotationName = annotation.getTypeName();
+				if (modifier instanceof Annotation) {					
+					NormalAnnotation na = (NormalAnnotation) modifier;
+					Name annotationName = na.getTypeName();
 					String name = annotationName.getFullyQualifiedName();
+					
+										
 					if (name.equals("Perforated")) {
-						if (annotation instanceof MarkerAnnotation) {
+						List<MemberValuePair> tmpFactor = na.values();
+						if (!tmpFactor.isEmpty()) {
+							for (MemberValuePair pair : tmpFactor) {
+								if (pair.getName().getFullyQualifiedName().equals("factor")) {									
+									NumberLiteral num = (NumberLiteral) pair.getValue();																		
+									break;
+								}
+							}
+						} else {
+							System.out.println("did not find factor");
 							this.factor = 1;
-						}
-						else if (annotation instanceof SingleMemberAnnotation) {
-							this.factor = (int)((SingleMemberAnnotation) annotation).getStructuralProperty(SingleMemberAnnotation.VALUE_PROPERTY);
-						}
-						else {
-							throw new PerforationException("Unsupported @Perforated annotation type.");
 						}
 						prePerforated = true;
 						break;
@@ -148,6 +156,7 @@ public class PerforatedLoop {
 	        MethodDeclaration newMethod = findMethod(cu, methodName);
 	        addAnnotation(newMethod, cu, icu);
 	        cu = JavaPerforation.parse(icu);
+	        
 	        newMethod = findMethod(cu, methodName);
 	        Block block = (Block)newMethod.getStructuralProperty(MethodDeclaration.BODY_PROPERTY);
 	        int j = 0;
@@ -179,9 +188,15 @@ public class PerforatedLoop {
         	importLR.insertLast(id, null);
         }
         ListRewrite lr = rewrite.getListRewrite(newMethod, MethodDeclaration.MODIFIERS2_PROPERTY);
-        MarkerAnnotation ma = cu.getAST().newMarkerAnnotation();
-        ma.setStructuralProperty(MarkerAnnotation.TYPE_NAME_PROPERTY, cu.getAST().newSimpleName("Perforated"));
-        lr.insertFirst(ma, null);
+        NormalAnnotation an = cu.getAST().newNormalAnnotation();
+    	an.setTypeName(cu.getAST().newSimpleName("Perforated"));
+    	
+    	MemberValuePair mvp = cu.getAST().newMemberValuePair();
+    	mvp.setName(cu.getAST().newSimpleName("factor"));
+    	mvp.setValue(cu.getAST().newNumberLiteral("1"));
+    	List<ASTNode> children = (List<ASTNode>) an.getStructuralProperty(NormalAnnotation.VALUES_PROPERTY);
+    	children.add(mvp);    	
+        lr.insertFirst(an, null);
 
 	    // computation of the text edits
 	    TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
@@ -204,13 +219,18 @@ public class PerforatedLoop {
 		}
 	}
 
-	private static MethodDeclaration findMethod(CompilationUnit cu, String methodName) {
+	public static MethodDeclaration findMethod(CompilationUnit cu, String methodName) {
 		MethodFinder finder = new MethodFinder(methodName);
 		cu.accept(finder);
 		return finder.getMethod();
 	}
 
-	public void setFactor(int factor, ICompilationUnit icu) throws PerforationException {
+	public void setFactor(boolean undoing) throws PerforationException {
+		setFactor((double) this.factor, undoing);
+	}
+	
+	public void setFactor(double factor, boolean undoing) throws PerforationException {
+		ICompilationUnit icu = this.getCompilationUnit();
 		ASTNode cu = node.getRoot();
 		int prevFactor = this.factor;
 		// creation of ASTRewrite
@@ -257,12 +277,14 @@ public class PerforatedLoop {
         	}
         	Assignment replacement = cu.getAST().newAssignment();
     		replacement.setLeftHandSide(cu.getAST().newSimpleName(varName));
-    		if (prevIncrement % prevFactor != 0) {
-    			throw new PerforationException("Illegal increment for perforation type.");
+    		if (undoing) {
+	    		if (prevIncrement % prevFactor != 0) {
+	    			throw new PerforationException("Illegal increment for perforation type.");
+	    		}
     		}
-    		int n = prevIncrement / prevFactor;
-    		n *= factor;
-    		replacement.setRightHandSide(cu.getAST().newNumberLiteral(Integer.toString(Math.abs(n))));
+    		int n = (int) (prevIncrement * factor);// / prevFactor;    		
+//    		n *= factor;    		
+    		replacement.setRightHandSide(cu.getAST().newNumberLiteral(Integer.toString(Math.abs(n))));    		
     		if (n < 0) {
     			replacement.setOperator(Assignment.Operator.MINUS_ASSIGN);
     		}
@@ -271,24 +293,21 @@ public class PerforatedLoop {
     		}
     		rewrite.replace(updater, replacement, null);
         }
-        ListRewrite lr = rewrite.getListRewrite(method, MethodDeclaration.MODIFIERS2_PROPERTY);
-        ASTNode original = (ASTNode) lr.getOriginalList().get(0);
-        if (factor == 1) {
-        	MarkerAnnotation ma = cu.getAST().newMarkerAnnotation();
-        	ma.setTypeName(cu.getAST().newSimpleName("Perforated"));
-        	lr.replace(original, ma, null);
-        }
-        else {
-        	NormalAnnotation an = cu.getAST().newNormalAnnotation();
-        	an.setTypeName(cu.getAST().newSimpleName("Perforated"));
-        	MemberValuePair mvp = cu.getAST().newMemberValuePair();
-        	mvp.setName(cu.getAST().newSimpleName("factor"));
-        	mvp.setValue(cu.getAST().newNumberLiteral(Integer.toString(factor)));
-        	List<ASTNode> children = (List<ASTNode>) an.getStructuralProperty(NormalAnnotation.VALUES_PROPERTY);
-        	children.add(mvp);
-        	lr.replace(original, an, null);
-        }
-        // computation of the text edits
+//        ListRewrite lr = rewrite.getListRewrite(method, MethodDeclaration.MODIFIERS2_PROPERTY);
+//        ASTNode original = (ASTNode) lr.getOriginalList().get(0);
+//        
+//    	NormalAnnotation an = cu.getAST().newNormalAnnotation();
+//    	an.setTypeName(cu.getAST().newSimpleName("Perforated"));
+//    	
+//    	MemberValuePair mvp = cu.getAST().newMemberValuePair();
+//    	mvp.setName(cu.getAST().newSimpleName("factor"));
+//    	mvp.setValue(cu.getAST().newNumberLiteral(Integer.toString(factor)));
+//    	List<ASTNode> children = (List<ASTNode>) an.getStructuralProperty(NormalAnnotation.VALUES_PROPERTY);
+//    	children.add(mvp);
+//    	lr.replace(original, an, null);
+        
+        
+     // computation of the text edits
         TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
 
         // computation of the new source code
@@ -307,15 +326,16 @@ public class PerforatedLoop {
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
-
-        this.factor = factor;
+//        this.factor = factor;
         this.reparse(icu, method.getName().getFullyQualifiedName());
 	}
 
-	private CompilationUnit reparse(ICompilationUnit icu, String methodName) throws PerforationException {
+	public CompilationUnit reparse(ICompilationUnit icu, String methodName) throws PerforationException {
 		CompilationUnit cu = JavaPerforation.parse(icu);
         this.method = findMethod(cu, methodName);
+
         Block block = (Block)this.method.getStructuralProperty(MethodDeclaration.BODY_PROPERTY);
+
         int j = 0;
         while (j < block.statements().size()) {
 	        ASTNode topLevel = (ASTNode)block.statements().get(j);
@@ -360,18 +380,21 @@ public class PerforatedLoop {
 		}
 	}
 	
-	public void addMarker(String markerName, String annotation, Results result) {
+	public void addMarker(String markerName, String annotation, Results result) throws PerforationException {
 		String msg = "Perforation Results: QOS = %s; Speedup = %s";
 		msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.Speedup));
 		Position position = new Position(this.method.getStartPosition(),
 										 this.method.getLength());
 		try {
-			CompilationUnit cu = (CompilationUnit) this.node.getRoot();
+			CompilationUnit cu = (CompilationUnit) this.method.getRoot();
 			IJavaElement element = cu.getJavaElement();
 			if (element instanceof ICompilationUnit) {
-				ICompilationUnit icu = (ICompilationUnit) element;
+				ICompilationUnit icu = (ICompilationUnit) element;				
 				IMarker marker = MarkerFactory.createMarker(icu.getResource(), markerName, msg, position);
-				MarkerFactory.addAnnotation(marker, annotation, position, cu);
+				
+//				String newSource = MarkerFactory.addAnnotation(marker, annotation, position, cu);
+//				icu.getBuffer().setContents(newSource);
+//				this.reparse(icu, this.method.getName().getFullyQualifiedName());
 			}
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
@@ -393,6 +416,107 @@ public class PerforatedLoop {
 	public String getName() {
 		String className = method.getClass().getName();
 		String name = method.getName().toString();
-		return className + "-" + name;
+		return method.getName().getFullyQualifiedName();
+	}
+	
+	public String getClassName() {
+		CompilationUnit cu = (CompilationUnit) method.getRoot();
+		return cu.getJavaElement().getElementName();
+		
+	}
+	
+	public void setStoredFactor(int factor) {
+		this.storedFactor = factor;
+	}
+	
+	public void resetFactor() throws PerforationException {
+		ICompilationUnit icu = this.getCompilationUnit();
+//		setFactor(this.storedFactor, icu);
+	}
+	
+	public void unperforate() throws PerforationException {	
+//		int curr_val = readFactor();
+		setFactor( 1.0 / this.factor, true);
+	}
+	
+	public MethodDeclaration getMethod() {
+		return this.method;
+	}
+	
+	public void perforate() throws PerforationException {
+		this.factor = readFactor();		
+		setFactor(false);
+	}
+
+
+	public void removeAnnotation() throws PerforationException {
+		ICompilationUnit icu = this.getCompilationUnit();
+		Document document;
+        try {
+			document = new Document(icu.getSource());
+		} catch (JavaModelException e) {
+			throw new PerforationException("Could not parse document to Java model.");
+		}
+		ASTRewrite rewrite = ASTRewrite.create(this.method.getAST());
+        ListRewrite lr = rewrite.getListRewrite(this.method, MethodDeclaration.MODIFIERS2_PROPERTY);
+        
+		List<ASTNode> modifiers = (List<ASTNode>) this.method.getStructuralProperty(MethodDeclaration.MODIFIERS2_PROPERTY);
+		for (ASTNode modifier : modifiers) {
+			if (modifier instanceof Annotation) {
+				NormalAnnotation na = (NormalAnnotation) modifier;
+				Name annotationName = na.getTypeName();
+				String name = annotationName.getFullyQualifiedName();
+					
+				if (name.equals("Perforated")) {
+					lr.remove(na, null);
+				}
+			}
+		}
+
+	    // computation of the text edits
+	    TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
+	
+	    // computation of the new source code
+	    try {
+			edits.apply(document);
+		} catch (MalformedTreeException e) {
+			e.printStackTrace();
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+	    String newSource = document.get();
+	    
+	    // update of the compilation unit
+	    try {
+			icu.getBuffer().setContents(newSource);
+		} catch (JavaModelException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private int readFactor() {
+		ICompilationUnit icu = this.getCompilationUnit();
+		List<ASTNode> modifiers = (List<ASTNode>) this.method.getStructuralProperty(MethodDeclaration.MODIFIERS2_PROPERTY);		
+		for (ASTNode modifier : modifiers) {
+			if (modifier instanceof Annotation) {
+				NormalAnnotation na = (NormalAnnotation) modifier;
+				Name annotationName = na.getTypeName();
+				String name = annotationName.getFullyQualifiedName();
+				
+				if (name.equals("Perforated")) {
+					List<MemberValuePair> tmpFactor = na.values();
+					if (!tmpFactor.isEmpty()) {
+						for (MemberValuePair pair : tmpFactor) {
+							if (pair.getName().getFullyQualifiedName().equals("factor")) {
+								NumberLiteral num = (NumberLiteral) pair.getValue();
+								return Integer.parseInt(num.getToken());
+							}
+						}
+					}
+				}
+			}
+		}
+		System.err.println("Could not read perforation factor");
+		return 1;
 	}
 }

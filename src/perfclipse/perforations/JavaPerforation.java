@@ -48,13 +48,16 @@ public class JavaPerforation {
 	private void scanPerforations(IResource[] resources) throws CoreException {
 		for (IResource file : resources) {
 			if (file instanceof IFile && file.isAccessible()) {
+//				System.out.println("first if");
 		        IJavaElement element = JavaCore.create((IFile)file);
 		        if (element instanceof ICompilationUnit) {
+//		        	System.out.println("second if");
 		            ICompilationUnit icu = (ICompilationUnit)element;
 		            CompilationUnit cu = parse(icu);
 		            JavaPerforationVisitor visitor = new JavaPerforationVisitor();
 		            cu.accept(visitor);
 		            for (PerforatedLoop loop : visitor.getLoops()) {
+		            	System.out.println("Found loop" + loop.getName());
 		            	loops.add(loop);
 		            }
 		        }
@@ -72,6 +75,12 @@ public class JavaPerforation {
 		return perforations.get(project);
 	}
 	
+	public static void removePerforation(IProject project) {
+		if (perforations.containsKey(project)) {
+			perforations.remove(project);
+		}
+	}
+	
 	public static List<PerforatedLoop> getPerforatedLoops(IProject project) {
 		if (perforations.containsKey(project)) {
 			return perforations.get(project).loops;
@@ -80,6 +89,29 @@ public class JavaPerforation {
 	}
 
 	public PerforatedLoop perforateLoop(ITextSelection sel, ITextEditor editor) {
+		ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
+        ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
+        CompilationUnit cu = parse(icu);
+        NodeFinder finder = new NodeFinder(cu, sel.getOffset(), sel.getLength());
+        ASTNode node = finder.getCoveringNode();
+        try {
+        	LoopVisitor visitor = new LoopVisitor();
+    		node.accept(visitor);
+    		boolean found = false;
+    		for (ForStatement stmt : visitor.getLoops()) {
+    			if (found/* && !MessageDialog.openConfirm(shell, "More than one loop found", "More than one loop was selected. Continue perforating the next loop?")*/) {
+    				MessageDialog.openError(shell, "Multiple loops found", "Only the first loop was perforated.");
+    				break;
+    			}
+    			return new PerforatedLoop(stmt);
+    		}
+		} catch (PerforationException e) {
+			MessageDialog.openError(shell, "Perforation failed", e.getMessage());
+		}
+        return null;
+	}
+	
+	public PerforatedLoop markLoopForPerforation (ITextSelection sel, ITextEditor editor) {
 		ITypeRoot typeRoot = JavaUI.getEditorInputTypeRoot(editor.getEditorInput());
         ICompilationUnit icu = (ICompilationUnit) typeRoot.getAdapter(ICompilationUnit.class);
         CompilationUnit cu = parse(icu);
@@ -102,7 +134,7 @@ public class JavaPerforation {
 	 * @param unit
 	 * @return
 	 */
-	static CompilationUnit parse(ICompilationUnit unit) {
+	public static CompilationUnit parse(ICompilationUnit unit) {
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(unit);
@@ -142,11 +174,15 @@ public class JavaPerforation {
 
 		// TODO: This works but is suboptimal - should just check methods with the annotation.
 		public boolean visit(ForStatement node) {
+			System.out.println("for loop execution");
 			try {
 				PerforatedLoop loop = new PerforatedLoop(node);
+				System.out.println("Got Here: " + loop.getName());
 				loops.add(loop);
 			} catch (PerforationException e) {
 				// Not a perforated loop, move along.
+				
+				System.err.println(e.getMessage());
 			}
 			return super.visit(node);
 		}

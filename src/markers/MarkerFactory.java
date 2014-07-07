@@ -1,7 +1,10 @@
 package markers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.filebuffers.FileBuffers;
@@ -12,6 +15,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
@@ -42,7 +46,15 @@ public class MarkerFactory {
 		return marker;
 	}
 	
-	public static void addAnnotation(IMarker marker, String annotation, Position position, CompilationUnit cu) throws CoreException {		
+	public static List<IMarker> findAllMarkers(IResource  resource) {
+        try {
+            return Arrays.asList(resource.findMarkers(markerMap.get("GREENMARKER"), true, IResource.DEPTH_INFINITE));
+        } catch (CoreException e) {
+            return new ArrayList<IMarker>();
+        }
+    }
+	
+	public static String addAnnotation(IMarker marker, String annotation, Position position, CompilationUnit cu) throws CoreException {		
 		IPath path = cu.getJavaElement().getPath();
 		ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
 		bufferManager.connect(path, LocationKind.IFILE, null); // (1)
@@ -55,6 +67,13 @@ public class MarkerFactory {
 		iamf.connect(document);
 		iamf.addAnnotation(ma, position);
 		iamf.disconnect(document);
+		
+		String newSource = document.get();
+		//bufferManager.disconnect(path, LocationKind.IFILE, null);
+		return newSource;
+		
+		
+		
 	}
 
 }

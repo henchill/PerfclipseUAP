@@ -1,4 +1,5 @@
 package handlers;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -15,10 +16,8 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
-import perfclipse.perforations.PerforationException;
 
-
-public class PerforateSelectionHandler extends AbstractHandler {
+public class ExtractLoopHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -34,26 +33,20 @@ public class PerforateSelectionHandler extends AbstractHandler {
 		    JavaPerforation jp;
 			try {
 				jp = JavaPerforation.getPerforation(project, shell);
-				PerforatedLoop pl = jp.perforateLoop(sel, editor);
-				
+				PerforatedLoop pl = jp.markLoopForPerforation(sel, editor);
 				if (pl == null) {
 					return null;
-				} else {
-					pl.perforate();
-					pl.removeAnnotation();
 				}
 			} catch (CoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			} catch (PerforationException pe) {
-				pe.printStackTrace();
 			}
 	    }
-	    return null;
+		return null;
 	}
-	
-    private ITextSelection getITextSelection(ITextEditor textEditor) {
-        return (ITextSelection) textEditor.getSelectionProvider().getSelection();
-    }
+
+	private ITextSelection getITextSelection(ITextEditor editor) {
+		return (ITextSelection) editor.getSelectionProvider().getSelection();
+	}
 
 }
