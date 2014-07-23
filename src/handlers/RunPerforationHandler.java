@@ -38,12 +38,12 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 
-import perfclipse.LoopSelectionDialog;
-import perfclipse.PerforationInfoDialog;
-import perfclipse.PerforationLaunch;
-import perfclipse.Results;
-import perfclipse.ResultsJsonClass;
-import perfclipse.ResultsViewer;
+import perfclipse.main.LoopSelectionDialog;
+import perfclipse.main.PerforationInfoDialog;
+import perfclipse.main.PerforationLaunch;
+import perfclipse.main.Results;
+import perfclipse.main.ResultsJsonClass;
+import perfclipse.main.ResultsViewer;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 import perfclipse.perforations.PerforationException;

@@ -21,7 +21,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.part.FileEditorInput;
 
-import perfclipse.PerforationTypeDialog;
+import perfclipse.main.PerforationTypeDialog;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 import perfclipse.perforations.PerforationException;

@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 
-import perfclipse.Results;
+import perfclipse.main.Results;
 
 import java.util.List;
 
@@ -226,10 +226,11 @@ public class PerforatedLoop {
 	}
 
 	public void setFactor(boolean undoing) throws PerforationException {
+		
 		setFactor((double) this.factor, undoing);
 	}
 	
-	public void setFactor(double factor, boolean undoing) throws PerforationException {
+	public void setFactor(double factor, boolean undoing) throws PerforationException {		
 		ICompilationUnit icu = this.getCompilationUnit();
 		ASTNode cu = node.getRoot();
 		int prevFactor = this.factor;
@@ -282,7 +283,8 @@ public class PerforatedLoop {
 	    			throw new PerforationException("Illegal increment for perforation type.");
 	    		}
     		}
-    		int n = (int) (prevIncrement * factor);// / prevFactor;    		
+    		int n = (int) (prevIncrement * factor);// / prevFactor;  
+
 //    		n *= factor;    		
     		replacement.setRightHandSide(cu.getAST().newNumberLiteral(Integer.toString(Math.abs(n))));    		
     		if (n < 0) {
@@ -402,6 +404,16 @@ public class PerforatedLoop {
 		}
 	}
 	
+	public void removeMarkers(String markerName) {
+	
+		CompilationUnit cu = (CompilationUnit) this.method.getRoot();
+		IJavaElement element = cu.getJavaElement();
+		if (element instanceof ICompilationUnit) {
+			ICompilationUnit icu = (ICompilationUnit) element;	
+			MarkerFactory.deleteAllMarkers(icu.getResource());
+		}
+	
+	}
 	public ICompilationUnit getCompilationUnit() {
 		CompilationUnit cu = (CompilationUnit) this.method.getRoot();
 		
@@ -445,7 +457,7 @@ public class PerforatedLoop {
 	
 	public void perforate() throws PerforationException {
 		this.factor = readFactor();		
-		setFactor(false);
+		setFactor(this.factor, false);
 	}
 
 

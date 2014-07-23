@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;

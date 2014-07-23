@@ -5,5 +5,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="lib" path="src/perforated.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/java-json.jar"/>
+	<classpathentry kind="lib" path="perfclipse.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

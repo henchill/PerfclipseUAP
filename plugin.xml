@@ -19,13 +19,13 @@
                id="Perfclipse.menus.sampleMenu"
                label="Perforation">
             <command
-                  commandId="Perfclipse.commands.perforateSelection"
-                  label="Perforate Selection"
+                  commandId="Perfclipse.commands.extractLoop"
+                  label="Extract Loop"
                   style="push">
             </command>
             <command
-                  commandId="Perfclipse.commands.runPerforation"
-                  label="Run Perforation"
+                  commandId="Perfclipse.commands.perforateSelection"
+                  label="Perforate Selection"
                   style="push">
             </command>
             <command
@@ -34,8 +34,8 @@
                   style="push">
             </command>
             <command
-                  commandId="Perfclipse.commands.extractLoop"
-                  label="Extract Loop"
+                  commandId="Perfclipse.commands.runPerforation"
+                  label="Multi-Loop Analysis"
                   style="push">
             </command>
          </menu>
@@ -56,7 +56,7 @@
             commandId="Perfclipse.commands.individualLoopAnalysis">
       </handler>
       <handler
-            class="perfclipse.ViewResults"
+            class="perfclipse.main.ViewResults"
             commandId="Perfclipse.commands.viewResults">
       </handler>
       <handler

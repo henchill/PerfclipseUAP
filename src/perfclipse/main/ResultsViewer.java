@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.TableViewer;

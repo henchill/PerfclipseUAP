@@ -65,12 +65,12 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.texteditor.ITextEditor;
 
-import perfclipse.MethodVisitor;
 import perfclipse.PerforationEvaluation;
-import perfclipse.PerforationInfoDialog;
-import perfclipse.PerforationLaunch;
-import perfclipse.PerforationTypeDialog;
-import perfclipse.Results;
+import perfclipse.main.MethodVisitor;
+import perfclipse.main.PerforationInfoDialog;
+import perfclipse.main.PerforationLaunch;
+import perfclipse.main.PerforationTypeDialog;
+import perfclipse.main.Results;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 import perfclipse.perforations.PerforationException;
@@ -87,11 +87,12 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    PerforationInfoDialog dialog = new PerforationInfoDialog(shell);
 	    dialog.create();
 	    if (dialog.open() == Window.OK) {
-	    	String project = "SomeProject1"; //dialog.getProjectName();
-	    	String main = "SomeProject1.src.TestClass"; //dialog.getMainClass();
-	    	String eval = "SomeProject1.src.EvaluateFunc"; //dialog.getEvalClass();
+	    	String project = dialog.getProjectName();
+	    	String main = dialog.getMainClass();
+	    	String eval = dialog.getEvalClass();
 	    	IProject iProject = PerforationLaunch.getProject(project);
 	  
+	    	
 //	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
 	    	
 	    	if (iProject != null) { // && eval class is correct
@@ -103,6 +104,8 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    		JavaPerforation jp;
 	    		try {
 					jp = JavaPerforation.getPerforation(iProject, shell);
+					
+					removeMarkers(iProject);
 					
 					// Run unperforated version of the project
 					try {
@@ -134,12 +137,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					iProject.getWorkspace().save(true, null);
 					JavaPerforation.removePerforation(iProject);
 //					jp = JavaPerforation.getPerforation(iProject, shell);
-					addMarkersToSource(iProject, perforatedResults);
-					
-					
-					
-					
-					// Run each individual perforated loop
+					addMarkersToSource(iProject, perforatedResults); 
 					
 				} catch (CoreException e) {
 					// TODO Auto-generated catch block
@@ -155,6 +153,23 @@ public class RunIndividualAnalysis extends AbstractHandler {
 		return null;
 	}
 
+	private void removeMarkers(IProject project) {
+		try {
+			IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
+		
+		    // parse(JavaCore.create(project));
+		    for (IPackageFragment mypackage : packages) {
+		    	if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+		    		for (ICompilationUnit icu : mypackage.getCompilationUnits()) {		    			
+		    			MarkerFactory.deleteAllMarkers(icu.getResource());
+		    		}
+		    	}
+		    }
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private void addMarkersToSource(IProject project, HashMap<String, Results> perforatedResults) {		
 		try {
 			IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
@@ -179,17 +194,22 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					    				if (result == null) {
 					    					System.out.println("result was null");
 					    					break;
+					    				} else {
+					    					System.out.println(result.QualityOfService);
+					    					if (result.QualityOfService < 0.25) {
+					    						String msg = "Perforation Results: QOS = %s; Speedup = %s";
+						  		      			msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.Speedup));
+						  		      			
+							    				Position position = new Position(method.getStartPosition(),
+					  		      						method.getLength());
+					  		      				IMarker marker = MarkerFactory.createMarker(icu.getResource(), "GREENMARKER",
+					  		      						msg, position);
+					  		      				
+					  		      				String newSource = MarkerFactory.addAnnotation(marker, "GREENANNOTATION", position, cu);
+					  		      				icu.getBuffer().setContents(newSource);
+					    					}
 					    				}
-					    				String msg = "Perforation Results: QOS = %s; Speedup = %s";
-				  		      			msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.Speedup));
-				  		      			
-					    				Position position = new Position(method.getStartPosition(),
-			  		      						method.getLength());
-			  		      				IMarker marker = MarkerFactory.createMarker(icu.getResource(), "GREENMARKER",
-			  		      						msg, position);
-			  		      				
-			  		      				String newSource = MarkerFactory.addAnnotation(marker, "GREENANNOTATION", position, cu);
-			  		      				icu.getBuffer().setContents(newSource);
+					    				
 		    						}
 		    					}
 		    				}
@@ -201,41 +221,5 @@ public class RunIndividualAnalysis extends AbstractHandler {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-	}
-	
-	private void recordResults(List<Results> results) {
-		try
-		{
-			DateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
-			String sdt = df.format(new Date(System.currentTimeMillis()));
-		    FileWriter writer = new FileWriter(String.format("RunIndividualAnalysis-%s.csv", sdt));
-	 
-		    writer.append("Loop");
-		    writer.append(',');
-		    writer.append("Quality Of Service");
-		    writer.append(',');
-		    writer.append("Performance");
-		    writer.append('\n');
-		    
-		    for (Results result : results) {
-		    	if (result.PerforatedLoops.size() > 0) {
-		    		writer.append(result.PerforatedLoops.get(0).getName());
-		    	}
-		    	writer.append(',');
-		    	writer.append(String.valueOf(result.QualityOfService));
-		    	writer.append(',');
-		    	writer.append(String.valueOf(result.ElapsedTime)); //df.format(new Date(result.ElapsedTime)));
-		    	writer.append('\n');
-		    }
-	 
-		    //generate whatever data you want
-	 
-		    writer.flush();
-		    writer.close();
-		}
-		catch(IOException e)
-		{
-		     e.printStackTrace();
-		} 
 	}
 }

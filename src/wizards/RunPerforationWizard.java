@@ -23,8 +23,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.TreeItem;
 
 import perfclipse.PerforationEvaluation;
-import perfclipse.PerforationLaunch;
-import perfclipse.Results;
+import perfclipse.main.PerforationLaunch;
+import perfclipse.main.Results;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 

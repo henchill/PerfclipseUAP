@@ -54,6 +54,16 @@ public class MarkerFactory {
         }
     }
 	
+	public static void deleteAllMarkers(IResource resource) {
+		try {
+			List<IMarker> markers = Arrays.asList(resource.findMarkers(markerMap.get("GREENMARKER"), true, IResource.DEPTH_INFINITE));
+			for (IMarker marker : markers) {
+				marker.delete();
+			}
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+	}
 	public static String addAnnotation(IMarker marker, String annotation, Position position, CompilationUnit cu) throws CoreException {		
 		IPath path = cu.getJavaElement().getPath();
 		ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
@@ -63,7 +73,7 @@ public class MarkerFactory {
       	IAnnotationModel iamf = textFileBuffer.getAnnotationModel();
 		
 		SimpleMarkerAnnotation ma = new SimpleMarkerAnnotation(markerMap.get(annotation), marker);
-		
+
 		iamf.connect(document);
 		iamf.addAnnotation(ma, position);
 		iamf.disconnect(document);

@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 
 import java.io.File;
 import java.io.FileWriter;

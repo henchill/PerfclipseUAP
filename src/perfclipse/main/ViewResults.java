@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;

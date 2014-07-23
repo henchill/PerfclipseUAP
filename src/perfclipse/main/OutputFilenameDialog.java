@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;

@@ -1,4 +1,4 @@
-package perfclipse;
+package perfclipse.main;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;

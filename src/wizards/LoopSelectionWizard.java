@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import perfclipse.PerforationLaunch;
+import perfclipse.main.PerforationLaunch;
 import perfclipse.perforations.JavaPerforation;
 import perfclipse.perforations.PerforatedLoop;
 
