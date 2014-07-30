@@ -36,6 +36,8 @@ public class LoopSelectionDialog extends TitleAreaDialog {
 	}
 	
 	public void setProject(IProject project) {
+		System.out.println("set project called");
+		System.out.println(project == null);
 		iProject = project;
 	}
 	

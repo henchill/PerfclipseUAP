@@ -41,6 +41,7 @@ public class JavaPerforation {
 		this.project = project;
 		this.shell = shell;
 		this.loops = new ArrayList<PerforatedLoop>();
+		System.out.println(project == null);
 		IResource[] resources = project.members();
 		this.scanPerforations(resources);
 	}

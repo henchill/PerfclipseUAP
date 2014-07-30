@@ -67,9 +67,9 @@ public class RunPerforationHandler extends AbstractHandler {
 		
 		if (pid.open() == Window.OK) {
 			infoGiven = true;
-			projectName = "SomeProject1";//pid.getProjectName();
+			projectName = pid.getProjectName();
 			eval = "";//pid.getEvalClass();
-			main = "SomeProject1.src.CopyOfTestClass"; //pid.getMainClass();
+			main = pid.getMainClass();
 			
 			project = PerforationLaunch.getProject(projectName);
 		}
