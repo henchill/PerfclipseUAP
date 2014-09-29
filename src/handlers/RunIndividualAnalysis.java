@@ -86,19 +86,28 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    
 	    PerforationInfoDialog dialog = new PerforationInfoDialog(shell);
 	    dialog.create();
+//	    dialog.disableEvalOut();
 	    if (dialog.open() == Window.OK) {
 	    	String project = dialog.getProjectName();
-	    	String main = dialog.getMainClass();
+	    	String pMain = dialog.getProjectMain();
+	 
 	    	String eval = dialog.getEvalClass();
+	    	String eMain = dialog.getEvalMain();
+	    	String eOut = dialog.getEvalOut();
+	    	
 	    	IProject iProject = PerforationLaunch.getProject(project);
+	    	IProject eProject = PerforationLaunch.getProject(eval);
 	  
 	    	
 //	    	PerforationEvaluation evalObj = PerforationLaunch.getEvalObject(eval);
 	    	
-	    	if (iProject != null) { // && eval class is correct
-	    		PerforationLaunch pl = new PerforationLaunch();
-	    		Results originalResult = null;
-	    		HashMap<String, Results> perforatedResults = new HashMap<String, Results>();
+	    	if (iProject != null && eProject != null) { // && eval class is correct
+	    		PerforationLaunch pl = new PerforationLaunch(iProject, eProject, pMain, eMain, this);
+	    		
+	    		
+	    		
+//	    		Results originalResult = null;
+//	    		HashMap<String, Results> perforatedResults = new HashMap<String, Results>();
 				
 	    		JavaPerforation.removePerforation(iProject);
 	    		JavaPerforation jp;
@@ -107,37 +116,40 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					
 					removeMarkers(iProject);
 					
-					// Run unperforated version of the project
-					try {
-						originalResult = pl.runUnperforated(iProject, main, eval);
-					} catch (CoreException e) {
-						e.printStackTrace();
-					}
-					
-		    		// Run each individual perforated loop
 					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
-					for (PerforatedLoop loop : loops) {
-						try {
-							loop.perforate();
-							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
-							tmp.add(loop);
-							Results res = pl.runPerforated(iProject, main, eval, tmp);
-							if (originalResult != null) {
-								res.Speedup = (double) originalResult.ElapsedTime / res.ElapsedTime;								
-							}													
-							perforatedResults.put(loop.getName(), res);	
-							loop.unperforate();								
-						} catch (PerforationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
+					pl.runIndLoopAnalysis(loops, eOut);
 					
-					// add marker annotation
-					iProject.getWorkspace().save(true, null);
-					JavaPerforation.removePerforation(iProject);
-//					jp = JavaPerforation.getPerforation(iProject, shell);
-					addMarkersToSource(iProject, perforatedResults); 
+//					// Run unperforated version of the project
+//					try {
+//						originalResult = pl.runUnperforated(iProject, main, eval);
+//					} catch (CoreException e) {
+//						e.printStackTrace();
+//					}
+//					
+//		    		// Run each individual perforated loop
+//					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
+//					for (PerforatedLoop loop : loops) {
+//						try {
+//							loop.perforate();
+//							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
+//							tmp.add(loop);
+//							Results res = pl.runPerforated(iProject, main, eval, tmp);
+//							if (originalResult != null) {
+//								res.Speedup = (double) originalResult.ElapsedTime / res.ElapsedTime;								
+//							}													
+//							perforatedResults.put(loop.getName(), res);	
+//							loop.unperforate();								
+//						} catch (PerforationException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
+//					}
+					
+//					// add marker annotation
+//					iProject.getWorkspace().save(true, null);
+//					JavaPerforation.removePerforation(iProject);
+////					jp = JavaPerforation.getPerforation(iProject, shell);
+//					addMarkersToSource(iProject, perforatedResults); 
 					
 				} catch (CoreException e) {
 					// TODO Auto-generated catch block
@@ -151,6 +163,19 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	    }
 
 		return null;
+	}
+	
+	public void performCompleteAction(HashMap<String, Results> perforatedResults, IProject iProject) {
+//		try {
+//			iProject.getWorkspace().save(true, null);
+//		} catch (CoreException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		JavaPerforation.removePerforation(iProject);
+//		jp = JavaPerforation.getPerforation(iProject, shell);
+		addMarkersToSource(iProject, perforatedResults); 
+		System.out.println("addMarkersToSource executed");
 	}
 
 	private void removeMarkers(IProject project) {
@@ -196,7 +221,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					    					break;
 					    				} else {
 					    					System.out.println(result.QualityOfService);
-					    					if (result.QualityOfService < 0.25) {
+					    					if (result.QualityOfService < 0.25 && result.QualityOfService >= 0) {
 					    						String msg = "Perforation Results: QOS = %s; Speedup = %s";
 						  		      			msg = String.format(msg, String.valueOf(result.QualityOfService), String.valueOf(result.Speedup));
 						  		      			

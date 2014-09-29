@@ -48,7 +48,8 @@ public class MarkerFactory {
 	
 	public static List<IMarker> findAllMarkers(IResource  resource) {
         try {
-            return Arrays.asList(resource.findMarkers(markerMap.get("GREENMARKER"), true, IResource.DEPTH_INFINITE));
+        	System.out.println("finding markers");
+            return Arrays.asList(resource.findMarkers(markerMap.get("GREENMARKER"), true, IResource.DEPTH_ZERO));
         } catch (CoreException e) {
             return new ArrayList<IMarker>();
         }
@@ -57,6 +58,7 @@ public class MarkerFactory {
 	public static void deleteAllMarkers(IResource resource) {
 		try {
 			List<IMarker> markers = Arrays.asList(resource.findMarkers(markerMap.get("GREENMARKER"), true, IResource.DEPTH_INFINITE));
+			System.out.println("deleting markers: " + Integer.toString(markers.size()));
 			for (IMarker marker : markers) {
 				marker.delete();
 			}

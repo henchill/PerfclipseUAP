@@ -49,10 +49,12 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.internal.corext.refactoring.code.ExtractMethodRefactoring;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.ui.texteditor.SimpleMarkerAnnotation;
 
 public class PerforatedLoop {
 	private final static String PERFORATED_CLASS = "perfclipse.annotations.Perforated";
@@ -330,6 +332,27 @@ public class PerforatedLoop {
 		}
 //        this.factor = factor;
         this.reparse(icu, method.getName().getFullyQualifiedName());
+        
+        CompilationUnit cu2 = (CompilationUnit) this.method.getRoot();
+		IJavaElement javaElement = cu2.getJavaElement();
+		
+        ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager(); // get the buffer manager
+        IPath path = javaElement.getPath(); // unit: instance of CompilationUnit
+        try {
+        	bufferManager.connect(path, LocationKind.IFILE, null);
+        	ITextFileBuffer textFileBuffer = bufferManager.getTextFileBuffer(path, LocationKind.IFILE);
+        	textFileBuffer.commit(null, false );
+        } catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+          	try {
+				bufferManager.disconnect(path, LocationKind.IFILE, null);
+			} catch (CoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
 	}
 
 	public CompilationUnit reparse(ICompilationUnit icu, String methodName) throws PerforationException {
@@ -462,13 +485,44 @@ public class PerforatedLoop {
 
 
 	public void removeAnnotation() throws PerforationException {
+		CompilationUnit cu = (CompilationUnit) this.method.getRoot();
+		IPath path = cu.getJavaElement().getPath();
+		ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
+		try {
+			bufferManager.connect(path, LocationKind.IFILE, null);
+		} catch (CoreException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} // (1)
+      	ITextFileBuffer textFileBuffer = bufferManager.getTextFileBuffer(path, LocationKind.IFILE);
+      	IDocument document = textFileBuffer.getDocument();
+      	
 		ICompilationUnit icu = this.getCompilationUnit();
-		Document document;
-        try {
-			document = new Document(icu.getSource());
-		} catch (JavaModelException e) {
-			throw new PerforationException("Could not parse document to Java model.");
-		}
+		
+		List<IMarker> markers = MarkerFactory.findAllMarkers(icu.getResource());
+		System.out.println("markers found: " + Integer.toString(markers.size()));
+	    for (IMarker marker : markers) {
+			try {
+				int start = (int) marker.getAttribute(IMarker.CHAR_START);
+				int end = (int) marker.getAttribute(IMarker.CHAR_END);
+				Position position = new Position(start, end - start);
+				Position loopPosition = new Position(this.method.getStartPosition(),
+						 this.method.getLength());
+				if (!position.equals(loopPosition)) {
+					System.out.println("positions are equal");
+					IAnnotationModel iamf = textFileBuffer.getAnnotationModel();
+					
+					SimpleMarkerAnnotation ma = new SimpleMarkerAnnotation("Perfclipse.greenAnnotation", marker);
+
+					iamf.connect(document);
+					iamf.addAnnotation(ma, position);
+					iamf.disconnect(document);
+				}
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+	    }
+	    
 		ASTRewrite rewrite = ASTRewrite.create(this.method.getAST());
         ListRewrite lr = rewrite.getListRewrite(this.method, MethodDeclaration.MODIFIERS2_PROPERTY);
         
@@ -484,8 +538,8 @@ public class PerforatedLoop {
 				}
 			}
 		}
-
-	    // computation of the text edits
+		
+		// computation of the text edits
 	    TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
 	
 	    // computation of the new source code
@@ -497,13 +551,29 @@ public class PerforatedLoop {
 			e.printStackTrace();
 		}
 	    String newSource = document.get();
-	    
+		
 	    // update of the compilation unit
 	    try {
 			icu.getBuffer().setContents(newSource);
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
+	    
+	    System.out.println("remove annotation source updated");
+		IJavaElement javaElement = cu.getJavaElement();
+	    
+        try {
+        	bufferManager.connect(path, LocationKind.IFILE, null);
+        	textFileBuffer.commit(null, false );
+        } catch (CoreException e) {
+			e.printStackTrace();
+		} finally {
+          	try {
+				bufferManager.disconnect(path, LocationKind.IFILE, null);
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+        }
 	}
 
 	private int readFactor() {

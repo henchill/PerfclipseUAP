@@ -14,12 +14,17 @@ import org.eclipse.swt.widgets.Text;
 
 public class PerforationInfoDialog extends TitleAreaDialog {
 	private Text project;
-	private Text main;
+	private Text mainP;
 	private Text eval;
+	private Text mainE;
+	private Text evalOut;
 	
 	private String projectName;
-	private String mainClass;
+	private String pMain;
 	private String evalClass;
+	private String eMain;
+	private String eOut;
+	
 	
 	public PerforationInfoDialog(Shell parentShell) {
 	    super(parentShell);
@@ -42,8 +47,10 @@ public class PerforationInfoDialog extends TitleAreaDialog {
 	    container.setLayout(layout);
 
 	    createProject(container);
-	    createMain(container);
+	    createPMain(container);
 	    createEval(container);
+	    createEMain(container);
+	    createEOut(container);
 
 	    return area;
 	}
@@ -57,31 +64,65 @@ public class PerforationInfoDialog extends TitleAreaDialog {
 	    dataProject.horizontalAlignment = GridData.FILL;
 
 	    project = new Text(container, SWT.BORDER);
+	    project.setText("PerfclipseTest");
 	    project.setLayoutData(dataProject);
 	}
 	
-	private void createMain(Composite container) {
+	private void createPMain(Composite container) {
 	    Label lblMain = new Label(container, SWT.NONE);
-	    lblMain.setText("Main Class");
+	    lblMain.setText("Project Main");
 	    
 	    GridData dataMain = new GridData();
 	    dataMain.grabExcessHorizontalSpace = true;
 	    dataMain.horizontalAlignment = GridData.FILL;
 	    
-	    main = new Text(container, SWT.BORDER);
-	    main.setLayoutData(dataMain);
+	    mainP = new Text(container, SWT.BORDER);
+	    mainP.setText("Main");
+	    mainP.setLayoutData(dataMain);
 	}
 	
 	private void createEval(Composite container) {
 		Label lblEval = new Label(container, SWT.NONE);
-		lblEval.setText("Evaluation Class");
+		lblEval.setText("Evaluation Project");
 	    
 	    GridData dataEval = new GridData();
 	    dataEval.grabExcessHorizontalSpace = true;
 	    dataEval.horizontalAlignment = GridData.FILL;
 	    
 	    eval = new Text(container, SWT.BORDER);
+	    eval.setText("EvalTest");
 	    eval.setLayoutData(dataEval);
+	}
+	
+	private void createEMain(Composite container) {
+	    Label lblMain = new Label(container, SWT.NONE);
+	    lblMain.setText("Evaluation Main");
+	    
+	    GridData dataMain = new GridData();
+	    dataMain.grabExcessHorizontalSpace = true;
+	    dataMain.horizontalAlignment = GridData.FILL;
+	    
+	    mainE = new Text(container, SWT.BORDER);
+	    mainE.setText("Main");
+	    mainE.setLayoutData(dataMain);
+	}
+	
+	private void createEOut(Composite container) {
+		Label lblOut = new Label(container, SWT.NONE);
+		lblOut.setText("Output File");
+		
+		GridData dataOut = new GridData();
+		dataOut.grabExcessHorizontalSpace = true;
+		dataOut.horizontalAlignment = GridData.FILL;
+		
+		evalOut = new Text(container, SWT.BORDER);
+		evalOut.setText("C:/Users/Happy/Documents/Workspace/runtime-EclipseApplication/EvalTest/eval-test-output.txt");
+		evalOut.setLayoutData(dataOut);
+	}
+	
+	public void disableEvalOut() {
+		evalOut.setText("");
+		evalOut.setEnabled(false);
 	}
 	
 	@Override
@@ -91,8 +132,10 @@ public class PerforationInfoDialog extends TitleAreaDialog {
 	
 	private void saveInput() {
 		projectName = project.getText();
-		mainClass = main.getText();
+		pMain = mainP.getText();
 		evalClass = eval.getText();
+		eMain = mainE.getText();
+		eOut = evalOut.getText();
 	}
 	
 	@Override
@@ -105,12 +148,20 @@ public class PerforationInfoDialog extends TitleAreaDialog {
 		return projectName;
 	}
 
-	public String getMainClass() {
-		return mainClass;
+	public String getProjectMain() {
+		return pMain;
 	}
 	
 	public String getEvalClass() {
 		return evalClass;
+	}
+	
+	public String getEvalMain() {
+		return eMain;
+	}
+	
+	public String getEvalOut() {
+		return eOut;
 	}
 	
 	  // overriding this methods allows you to set the

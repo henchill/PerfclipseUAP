@@ -10,7 +10,7 @@ public class Results {
 	public String RunName;
 	public long ElapsedTime;
 	public double Speedup;
-	public double QualityOfService;
+	public double QualityOfService = -1.0;
 	public List<PerforatedLoop> PerforatedLoops;
 	public String toString () {
 		String tmp = "{RunName: %s,\nElapsedTime: %s}";

@@ -56,16 +56,16 @@ public class RunPerforationWizard extends Wizard {
 			String main = classSel.getMainText();
 			String project = classSel.getProjectText();
 			String eval = classSel.getEvalText();		
-			try {
-				PerforationLaunch pl = new PerforationLaunch();
-				results = new ArrayList<Results>(); 
-//				results.add(pl.runUnperforated(project, main, eval));
-				results.add(runPerforated(project, main, eval));				
-				
-			}
-			catch (CoreException e) {
-				e.printStackTrace();
-			}
+//			try {
+////				PerforationLaunch pl = new PerforationLaunch();
+//				results = new ArrayList<Results>(); 
+////				results.add(pl.runUnperforated(project, main, eval));
+////				results.add(runPerforated(project, main, eval));				
+//				
+//			}
+//			catch (CoreException e) {
+//				e.printStackTrace();
+//			}
 			
 			return true;
 		} else {
@@ -107,27 +107,27 @@ public class RunPerforationWizard extends Wizard {
 		return false;
 	}
 	
-	private Results runPerforated(String proj, String main, String evalClass) throws CoreException {
-		TreeItem[] selectedLoops = loopSel.getSelectedLoops();
-		IProject project = PerforationLaunch.getProject(proj);
-		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(project);
-		List<PerforatedLoop> sLoops = new ArrayList<PerforatedLoop>();
-		for (TreeItem item : selectedLoops){
-			String parent = item.getParentItem().getText();
-			String name = item.getText();
-			String loopName = parent + "-" + name;
-			for (PerforatedLoop loop : loops) {
-				if (!loop.getName().equals(loopName)) {
-//					loop.setFactor(0);
-				} else {
-//					loop.setFactor();
-					sLoops.add(loop);
-				}
-			}
-		}
-		PerforationLaunch pl = new PerforationLaunch();
-		return pl.runPerforated(project, main, evalClass, sLoops);
-	}
+//	private Results runPerforated(String proj, String main, String evalClass) throws CoreException {
+//		TreeItem[] selectedLoops = loopSel.getSelectedLoops();
+//		IProject project = PerforationLaunch.getProject(proj);
+//		List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(project);
+//		List<PerforatedLoop> sLoops = new ArrayList<PerforatedLoop>();
+//		for (TreeItem item : selectedLoops){
+//			String parent = item.getParentItem().getText();
+//			String name = item.getText();
+//			String loopName = parent + "-" + name;
+//			for (PerforatedLoop loop : loops) {
+//				if (!loop.getName().equals(loopName)) {
+////					loop.setFactor(0);
+//				} else {
+////					loop.setFactor();
+//					sLoops.add(loop);
+//				}
+//			}
+//		}
+//		PerforationLaunch pl = new PerforationLaunch();
+//		return pl.runPerforated(project, main, evalClass, sLoops);
+//	}
 
 	public HashMap<String, Results[]> getOutput() {
 		return output;

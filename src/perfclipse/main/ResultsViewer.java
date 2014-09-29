@@ -33,6 +33,11 @@ public class ResultsViewer extends Dialog{
 	private Results original;
 	private Results perforated;
 	private GridData openPerfData;
+	private String perfOut;
+	private String originalOut;
+	private Composite imgContainer;
+	private Label origImg;
+	private Label perfImg;
 	
 	public ResultsViewer(Shell parent) {
 		super(parent);
@@ -51,7 +56,20 @@ public class ResultsViewer extends Dialog{
 	    createResultsView(container);
 		createComparisonView(container);
 		getShell().setText("Results Viewer");
+//		setImages();
 		return composite;
+	}
+	
+	@Override
+	public void create() {
+		super.create();
+		setOriginalImage();
+		setPerfImage();
+	}
+	
+	public void setImages() {
+		setOriginalImage();
+		setPerfImage();
 	}
 	
 	private void createResultsView(Composite container) {
@@ -70,6 +88,74 @@ public class ResultsViewer extends Dialog{
 		perforated = perf;
 	}
 	
+	public void setOutputFiles(String orig, String perf) {
+		perfOut = perf;
+		originalOut = orig;
+	}
+	
+	private void setOriginalImage() {
+		Shell shell = imgContainer.getShell();
+//		imgContainer.pack();
+		if (originalOut != null) {
+			System.out.println(originalOut);
+			Image originalImage = new Image(shell.getDisplay(), originalOut);
+			
+			Rectangle imgBounds = originalImage.getBounds();
+			Rectangle labelBounds = origImg.getBounds();
+			Rectangle labelBounds2 = perfImg.getBounds();
+
+			System.out.println(labelBounds);
+			System.out.println(imgBounds);
+			
+			double widthScale = ((double) labelBounds.width) / imgBounds.width;
+			double heightScale = ((double) labelBounds.height) / imgBounds.height;
+			double factor = 1.0;
+			
+			System.out.println(widthScale);
+			System.out.println(heightScale);
+			System.out.println(factor);
+			
+			if (widthScale < 1 && heightScale < 1) {
+				factor = widthScale > heightScale ? heightScale : widthScale;
+			} else if (widthScale < 1) {
+				factor = widthScale;
+			} else if (heightScale < 1) {
+				factor = heightScale;
+			}
+			
+			
+			Image finalImg = new Image(shell.getDisplay(),
+					originalImage.getImageData().scaledTo((int) (imgBounds.width * factor), 
+							(int) (imgBounds.height * factor)));
+			origImg.setImage(finalImg);
+		}
+		
+		
+	}
+	
+	private void setPerfImage() {
+		Shell shell = imgContainer.getShell();
+		if (perfOut != null) {					
+			Image originalImage = new Image(shell.getDisplay(), perfOut);
+			
+			Rectangle imgBounds = originalImage.getBounds();
+			Rectangle labelBounds = perfImg.getBounds();
+			double widthScale = ((double) labelBounds.width) / imgBounds.width;
+			double heightScale = ((double) labelBounds.height) / imgBounds.height;
+			double factor = 1.0;
+			if (widthScale < 1 && heightScale < 1) {
+				factor = widthScale > heightScale ? heightScale : widthScale;
+			} else if (widthScale < 1) {
+				factor = widthScale;
+			} else if (heightScale < 1) {
+				factor = heightScale;
+			}
+			Image finalImg = new Image(shell.getDisplay(),
+					originalImage.getImageData().scaledTo((int) (imgBounds.width * factor), 
+							(int) (imgBounds.height * factor)));
+			perfImg.setImage(finalImg);
+		}
+	}
 	private Control createListView() {
 		return null;
 	}
@@ -90,6 +176,7 @@ public class ResultsViewer extends Dialog{
 	private Control createComparisonView(Composite container) {
 		final Composite comp = new Composite(container, SWT.NONE);
 		comp.setLayoutData(new GridData(GridData.FILL_BOTH | SWT.CENTER));
+		imgContainer = comp;
 		GridLayout layout = new GridLayout(2, false);
 //		layout.marginLeft = 40;
 //		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -119,7 +206,7 @@ public class ResultsViewer extends Dialog{
 		openPerfData.grabExcessHorizontalSpace = true;
 		openPerf.setLayoutData(openPerfData);
 		
-		final Label origImg = new Label(comp, SWT.CENTER);
+		origImg = new Label(comp, SWT.CENTER);
 //		origImg.setText("something");
 		GridData origImgData = new GridData(SWT.CENTER);
 		origImgData.horizontalSpan = 1;
@@ -128,8 +215,8 @@ public class ResultsViewer extends Dialog{
 		origImgData.grabExcessHorizontalSpace = true;
 		origImgData.grabExcessVerticalSpace = true;
 		origImg.setLayoutData(origImgData);
-		
-		final Label perfImg = new Label(comp, SWT.CENTER);
+			
+		perfImg = new Label(comp, SWT.CENTER);
 //		perfImg.setText("test");
 		GridData perfImgData = new GridData(SWT.CENTER);
 		perfImgData.horizontalSpan = 1;
@@ -139,14 +226,21 @@ public class ResultsViewer extends Dialog{
 		perfImgData.grabExcessVerticalSpace = true;
 		perfImg.setLayoutData(perfImgData);
 		
+//		comp.pack();
+		
+//		shell.pack();
+		
 		openPerf.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Shell shell = comp.getShell();
-				String selected = openDialog(shell);
+				if (perfOut == null) {
+					perfOut = openDialog(shell);
+				}
+				
 //				createImgLabel(selected);
-				if (selected != null) {					
-					Image originalImage = new Image(shell.getDisplay(), selected);
+				if (perfOut != null) {					
+					Image originalImage = new Image(shell.getDisplay(), perfOut);
 					
 					Rectangle imgBounds = originalImage.getBounds();
 					Rectangle labelBounds = perfImg.getBounds();
@@ -173,10 +267,13 @@ public class ResultsViewer extends Dialog{
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Shell shell = comp.getShell();
-				String selected = openDialog(shell);
+				if (originalOut == null) {
+					originalOut = openDialog(shell);
+				}
+//				String selected = openDialog(shell);
 //				createImgLabel(selected);
-				if (selected != null) {					
-					Image originalImage = new Image(shell.getDisplay(), selected);
+				if (originalOut != null) {					
+					Image originalImage = new Image(shell.getDisplay(), originalOut);
 					
 					Rectangle imgBounds = originalImage.getBounds();
 					Rectangle labelBounds = perfImg.getBounds();
@@ -243,7 +340,7 @@ public class ResultsViewer extends Dialog{
 	
 	@Override
 	protected boolean isResizable() {
-		return true;
+		return false;
 	}
 	
 	@Override

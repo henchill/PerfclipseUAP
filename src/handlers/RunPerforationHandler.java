@@ -51,10 +51,11 @@ import wizards.RunPerforationWizard;
 
 
 public class RunPerforationHandler extends AbstractHandler {
-
+	
+	private Shell shell;
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		Shell shell = HandlerUtil.getActiveShell(event);
+		shell = HandlerUtil.getActiveShell(event);
 		PerforationInfoDialog pid = new PerforationInfoDialog(shell);
 		pid.create();
 		List<PerforatedLoop> selectedLoops;
@@ -62,16 +63,22 @@ public class RunPerforationHandler extends AbstractHandler {
 		LoopSelectionDialog lsd = new LoopSelectionDialog(shell);
 		String projectName = "";
 		String eval = "";
-		String main = "";
+		String pMain = "";
+		String eMain = "";
+		String eOut = "";
+		
 		IProject project = null;
+		IProject evalProject = null;
 		
 		if (pid.open() == Window.OK) {
 			infoGiven = true;
 			projectName = pid.getProjectName();
-			eval = "";//pid.getEvalClass();
-			main = pid.getMainClass();
-			
+			eval = pid.getEvalClass();
+			pMain = pid.getProjectMain();
+			eMain = pid.getEvalMain();
+			eOut = pid.getEvalOut();
 			project = PerforationLaunch.getProject(projectName);
+			evalProject = PerforationLaunch.getProject(eval);
 		}
 		Results originalResult = null;
 		Results perforatedResult = null;
@@ -84,82 +91,28 @@ public class RunPerforationHandler extends AbstractHandler {
 				// switch selected loops to a map. Then use the same icu for all of them. 
 				// call reparse with the new icu before doing any modifications. 
 				
-				PerforationLaunch pl = new PerforationLaunch();
-				// Run unperforated version of the project
-				try {
-					originalResult = pl.runUnperforated(project, main, eval);
-				} catch (CoreException e) {
-					e.printStackTrace();
-				}
-
-				for (int i = 0; i < selectedLoops.size(); i++) {
-					PerforatedLoop loop = selectedLoops.get(i);
-					try {						
-						loop.perforate();
-					} catch (PerforationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					for (int j = 0; j < selectedLoops.size(); j++) {
-						PerforatedLoop tmp = selectedLoops.get(j);
-						try {
-							tmp.reparse(loop.getCompilationUnit(), loop.getName());
-						} catch (PerforationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
+				PerforationLaunch pl = new PerforationLaunch(project, evalProject, pMain, eMain, this);
 				
-				try {
-					perforatedResult = pl.runPerforated(project, main, eval, selectedLoops);
-					if (originalResult != null) {
-						perforatedResult.Speedup = (double) originalResult.ElapsedTime / perforatedResult.ElapsedTime;								
-					}
-					
-					for (int i = 0; i < selectedLoops.size(); i++) {
-						PerforatedLoop loop = selectedLoops.get(i);
-						try {							
-							loop.unperforate();
-						} catch (PerforationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						for (int j = 0; j < selectedLoops.size(); j++) {
-							PerforatedLoop tmp = selectedLoops.get(j);
-							try {
-								tmp.reparse(loop.getCompilationUnit(), loop.getName());
-							} catch (PerforationException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-					}
-										
-					// save results
-					// launch output viewer
-				} catch (CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				if (originalResult != null && perforatedResult != null) {					
-					ResultsViewer rv = new ResultsViewer(shell);
-					rv.setResults(originalResult, perforatedResult);
-					rv.create();
-					
-					if (rv.open() == Window.CANCEL) {
-						//do nothing?
-					}
-					
-					// launch output viewer
-				}
+				pl.runMultiLoop(selectedLoops, eOut);			
 			}
 		}
 
 		return null;
+	}
+
+	public void performCompleteAction(Results originalResult, Results perforatedResult, String originalOut, String perfOut) {
+		if (originalResult != null && perforatedResult != null) {					
+			ResultsViewer rv = new ResultsViewer(shell);
+			rv.setResults(originalResult, perforatedResult);
+			rv.setOutputFiles(originalOut, perfOut);
+			rv.create();
+
+			if (rv.open() == Window.CANCEL) {
+				//do nothing?
+			}
+			
+			// launch output viewer
+		}
 	}
 
 }

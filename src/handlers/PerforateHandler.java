@@ -50,6 +50,7 @@ import perfclipse.perforations.JavaPerforation;
 public class PerforateHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {		
+		System.out.println("Perforate handler");
 		Shell shell = HandlerUtil.getActiveShell(event);
 	    ITextEditor editor = (ITextEditor) HandlerUtil.getActiveEditor(event);
 	    ITextSelection sel = getITextSelection(editor);
