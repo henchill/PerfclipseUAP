@@ -140,6 +140,7 @@ public class PerforationLaunch {
 			System.out.println("perforated elapsed time: " + Long.toString(result.ElapsedTime));
 			System.out.println("speedup: " + Double.toString(result.Speedup));
 			
+			result.PerforatedLoops.add(loop);
 			this.perforatedResults.put(loop.getName(), result);
 			this.loopsToPerf.remove(0);
 			
@@ -231,7 +232,7 @@ public class PerforationLaunch {
 			String currLine;
 			while((currLine = br.readLine()) != null) {
 				String[] tmp = currLine.split("=");
-				if (tmp[0].equals("QOS")) {
+				if (tmp[0].trim().equals("QOS")) {
 					currRes.QualityOfService = Double.parseDouble(tmp[1].trim());
 				}
 			}

@@ -174,6 +174,7 @@ public class PerforatedLoop {
 	}
 
 	private static void addAnnotation(MethodDeclaration newMethod, CompilationUnit cu, ICompilationUnit icu) throws PerforationException {
+		
 		Document document;
         try {
 			document = new Document(icu.getSource());
@@ -220,7 +221,80 @@ public class PerforatedLoop {
 			e.printStackTrace();
 		}
 	}
+	
+	public void addResults(double qos, double speedup, MethodDeclaration newMethod,
+			CompilationUnit cu, ICompilationUnit icu) throws PerforationException {
+		Document document;
+        try {
+			document = new Document(icu.getSource());
+		} catch (JavaModelException e) {
+			throw new PerforationException("Could not parse document to Java model.");
+		}
+        ASTRewrite rewrite = ASTRewrite.create(cu.getAST());
+		ASTNode method = node.getParent().getParent();
+		if (method instanceof MethodDeclaration) {
+			List<ASTNode> modifiers = (List<ASTNode>)method.getStructuralProperty(MethodDeclaration.MODIFIERS2_PROPERTY);
+			ListRewrite lr = rewrite.getListRewrite(newMethod, MethodDeclaration.MODIFIERS2_PROPERTY);
+			boolean prePerforated = false;
+			for (ASTNode modifier : modifiers) {
+				if (modifier instanceof Annotation) {
+					NormalAnnotation annotation = (NormalAnnotation) modifier;
+					Name annotationName = annotation.getTypeName();
+					String name = annotationName.getFullyQualifiedName();
+					if (name.equals("Perforated")) {
+						NormalAnnotation an = cu.getAST().newNormalAnnotation();
+				    	an.setTypeName(cu.getAST().newSimpleName("Perforated"));
+				    	List<ASTNode> old = (List<ASTNode>) annotation.getStructuralProperty(NormalAnnotation.VALUES_PROPERTY);
+				    	
+				    	int curr_factor = 1;
+				    	for (int i = 0; i < old.size(); i++) {
+				    		MemberValuePair child = (MemberValuePair) old.get(i);
+				    		if (child.getName().getFullyQualifiedName().equals("factor")) {
+				    			curr_factor = Integer.parseInt(((NumberLiteral) child.getValue()).getToken());
+				    		}
+				    	}
+				    	
+				    	MemberValuePair mvp = cu.getAST().newMemberValuePair();
+				    	mvp.setName(cu.getAST().newSimpleName("factor"));
+				    	mvp.setValue(cu.getAST().newNumberLiteral(Integer.toString(curr_factor)));
 
+						MemberValuePair mvp1 = cu.getAST().newMemberValuePair();
+				    	mvp1.setName(cu.getAST().newSimpleName("qos"));
+				    	mvp1.setValue(cu.getAST().newNumberLiteral(Double.toString(qos)));
+				    	
+				    	MemberValuePair mvp2 = cu.getAST().newMemberValuePair();
+				    	mvp2.setName(cu.getAST().newSimpleName("speedup"));
+				    	mvp2.setValue(cu.getAST().newNumberLiteral(Double.toString(speedup)));
+				    	
+				    	List<ASTNode> children = (List<ASTNode>) annotation.getStructuralProperty(NormalAnnotation.VALUES_PROPERTY);
+				    	children.add(mvp1);
+				    	children.add(mvp2);
+				        lr.replace(modifier, an, null);
+				        
+				        TextEdit edits = rewrite.rewriteAST(document, icu.getJavaProject().getOptions(true));
+				    	
+					    // computation of the new source code
+					    try {
+							edits.apply(document);
+						} catch (MalformedTreeException e) {
+							e.printStackTrace();
+						} catch (BadLocationException e) {
+							e.printStackTrace();
+						}
+					    String newSource = document.get();
+					
+					    // update of the compilation unit
+					    try {
+							icu.getBuffer().setContents(newSource);
+						} catch (JavaModelException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public static MethodDeclaration findMethod(CompilationUnit cu, String methodName) {
 		MethodFinder finder = new MethodFinder(methodName);
 		cu.accept(finder);

@@ -118,39 +118,7 @@ public class RunIndividualAnalysis extends AbstractHandler {
 					
 					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
 					pl.runIndLoopAnalysis(loops, eOut);
-					
-//					// Run unperforated version of the project
-//					try {
-//						originalResult = pl.runUnperforated(iProject, main, eval);
-//					} catch (CoreException e) {
-//						e.printStackTrace();
-//					}
-//					
-//		    		// Run each individual perforated loop
-//					List<PerforatedLoop> loops = JavaPerforation.getPerforatedLoops(iProject);
-//					for (PerforatedLoop loop : loops) {
-//						try {
-//							loop.perforate();
-//							List<PerforatedLoop> tmp = new ArrayList<PerforatedLoop>();
-//							tmp.add(loop);
-//							Results res = pl.runPerforated(iProject, main, eval, tmp);
-//							if (originalResult != null) {
-//								res.Speedup = (double) originalResult.ElapsedTime / res.ElapsedTime;								
-//							}													
-//							perforatedResults.put(loop.getName(), res);	
-//							loop.unperforate();								
-//						} catch (PerforationException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-//					}
-					
-//					// add marker annotation
-//					iProject.getWorkspace().save(true, null);
-//					JavaPerforation.removePerforation(iProject);
-////					jp = JavaPerforation.getPerforation(iProject, shell);
-//					addMarkersToSource(iProject, perforatedResults); 
-					
+
 				} catch (CoreException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -166,14 +134,8 @@ public class RunIndividualAnalysis extends AbstractHandler {
 	}
 	
 	public void performCompleteAction(HashMap<String, Results> perforatedResults, IProject iProject) {
-//		try {
-//			iProject.getWorkspace().save(true, null);
-//		} catch (CoreException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+
 		JavaPerforation.removePerforation(iProject);
-//		jp = JavaPerforation.getPerforation(iProject, shell);
 		addMarkersToSource(iProject, perforatedResults); 
 		System.out.println("addMarkersToSource executed");
 	}
